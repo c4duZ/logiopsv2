@@ -16,7 +16,7 @@ option(USE_USER_BUS "Uses user bus" OFF)
 
 find_package(Git)
 
-# Set version number and update submodules
+# Set version number (ipcgull is vendored in-tree, not a submodule)
 if(EXISTS ${PROJECT_SOURCE_DIR}/.git AND GIT_FOUND)
     execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags
          OUTPUT_VARIABLE LOGIOPS_VERSION
@@ -30,10 +30,6 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/.git AND GIT_FOUND)
         set(LOGIOPS_VERSION git-${LOGIOPS_COMMIT_HASH})
     endif()
 
-    execute_process(COMMAND ${GIT_EXECUTABLE}
-            submodule update --init --recursive
-            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-
     string(REGEX REPLACE "\n$" "" LOGIOPS_VERSION ${LOGIOPS_VERSION})
 elseif(EXISTS ${PROJECT_SOURCE_DIR}/version.txt)
     file(READ version.txt LOGIOPS_VERSION)
@@ -42,7 +38,7 @@ elseif(EXISTS ${PROJECT_SOURCE_DIR}/version.txt)
 endif()
 
 IF(NOT EXISTS ${PROJECT_SOURCE_DIR}/src/ipcgull)
-    message(FATAL_ERROR "Missing ipcgull submodule")
+    message(FATAL_ERROR "Missing src/ipcgull (vendored in-tree)")
 endif()
 
 if(NOT LOGIOPS_VERSION)
