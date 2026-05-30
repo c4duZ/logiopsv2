@@ -162,7 +162,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Access Path & Daemon Hardening | 6/6 | Complete    | 2026-05-30 |
-| 2. D-Bus Client & Device List | 5/5 | Complete   | 2026-05-30 |
+| 2. D-Bus Client & Device List | 5/5 | Complete    | 2026-05-30 |
 | 3. Core Config UI & Persistence | 0/TBD | Not started | - |
 | 4. Fine-Grained Gesture Control | 0/TBD | Not started | - |
 | 5. Per-Application Profiles & Profile Sharing | 0/TBD | Not started | - |
