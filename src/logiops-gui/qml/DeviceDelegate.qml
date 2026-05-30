@@ -176,6 +176,7 @@ Item {
                 }
             }
             Text {
+                id: pctText
                 visible: delegate.batteryKnown
                 text: delegate.batteryPercent + "%"
                 color: delegate.batteryColor
@@ -185,9 +186,11 @@ Item {
                 // relying on font.features — that is Qt 6.7+ and the target is
                 // 6.4.2 (UI-SPEC permits the fallback). Reserve the widest case
                 // ("100%") and right-align so 1-/2-/3-digit values don't shift.
+                // TextMetrics is not an Item, so it has no `parent` — reference the
+                // enclosing Text by id (parent.font was undefined → QFont warning).
                 Layout.preferredWidth: metrics.advanceWidth
                 horizontalAlignment: Text.AlignRight
-                TextMetrics { id: metrics; font: parent.font; text: "100%" }
+                TextMetrics { id: metrics; font: pctText.font; text: "100%" }
                 Behavior on color { ColorAnimation { duration: Theme.motionBase; easing.type: Theme.motionEasing } }
             }
 
