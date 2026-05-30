@@ -73,4 +73,9 @@ option(BUILD_TESTING "Build the logiops test suite" ON)
 if(BUILD_TESTING)
     enable_testing()
     add_subdirectory(test)
+    # Phase 3, Wave 0 test suite (CONF-01 save() round-trip + unknown-key +
+    # BTN-02 KeyNameMapper), registered under the `phase3` CTest name prefix.
+    # Added after src/logiops-gui so the optional logiops-gui-lib target (which
+    # the KeyNameMapper unit links) already exists when present.
+    add_subdirectory(tests/phase3)
 endif()
