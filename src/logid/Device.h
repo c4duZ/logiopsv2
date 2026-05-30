@@ -96,7 +96,13 @@ namespace logid {
 
         void sleep();
 
-        void setBattery(uint8_t percent, bool charging, bool known);
+        /* notify=false sets the battery properties WITHOUT emitting the
+         * BatteryChanged D-Bus signal — used for the one-shot initial read in
+         * DeviceBattery::configure(), which runs during _init() before the
+         * device's ipcgull node is exported (emitting a custom signal there
+         * dereferences a not-yet-ready connection → crash). Live updates from
+         * the broadcast event handler pass notify=true. */
+        void setBattery(uint8_t percent, bool charging, bool known, bool notify = true);
 
         void reconfigure();
 

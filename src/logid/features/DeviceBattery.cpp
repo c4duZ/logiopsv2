@@ -45,12 +45,16 @@ void DeviceBattery::configure() {
      * broadcast event handler registered in listen(). A device that is
      * momentarily unreachable simply keeps its last/unknown value. */
     try {
+        /* notify=false: this runs inside _init()'s configure() loop, before the
+         * device's ipcgull node is exported — emitting BatteryChanged here would
+         * crash. The properties are set so the GUI reads them via GetAll on
+         * enumerate; live changes emit via the broadcast handler in listen(). */
         if (_unified_battery) {
             auto status = _unified_battery->getStatus();
-            _device->setBattery(status.percentage, status.charging, status.known);
+            _device->setBattery(status.percentage, status.charging, status.known, false);
         } else {
             auto status = _battery_status->getStatus();
-            _device->setBattery(status.percentage, status.charging, status.known);
+            _device->setBattery(status.percentage, status.charging, status.known, false);
         }
     } catch (std::exception& e) {
         logPrintf(DEBUG, "Could not read initial battery status: %s", e.what());

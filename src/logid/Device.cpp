@@ -207,13 +207,14 @@ void Device::wakeup() {
     logPrintf(INFO, "%s:%d woke up.", _path.c_str(), _index);
 }
 
-void Device::setBattery(uint8_t percent, bool charging, bool known) {
+void Device::setBattery(uint8_t percent, bool charging, bool known, bool notify) {
     std::lock_guard<std::mutex> lock(_state_lock);
 
     _battery_percent = percent;
     _charging = charging;
     _battery_known = known;
-    _ipc_interface->notifyBattery();
+    if (notify)
+        _ipc_interface->notifyBattery();
 }
 
 void Device::reconfigure() {
