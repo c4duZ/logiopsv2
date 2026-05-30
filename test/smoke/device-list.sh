@@ -86,12 +86,40 @@ if ! echo "$ACTIVE_OUT" | grep -qE '^b[[:space:]]+(true|false)$'; then
 fi
 pass "Device Active = $(echo "$ACTIVE_OUT" | awk '{print $2}') (DEV-03)"
 
-# --- DEV-02 (best-effort): Battery property only exists once Plan 02 lands ---
-if BATT_OUT="$(busctl --system get-property "$SERVICE" "$FIRST" "$DEVICE_IFACE" Battery 2>&1)"; then
-    pass "Device Battery = ${BATT_OUT} (DEV-02)"
+# --- DEV-02: Battery is a uint8 0..100, OR BatteryKnown==false (still PASS) ---
+# The daemon (Plan 02) always exposes Battery/Charging/BatteryKnown on .Device.
+# A device that genuinely doesn't report battery sets BatteryKnown=false; that
+# is a legitimate PASS (the GUI shows "—"), not a FAIL. We only FAIL on a
+# malformed reply or an out-of-range value when the daemon claims it IS known.
+if ! BATT_OUT="$(busctl --system get-property "$SERVICE" "$FIRST" "$DEVICE_IFACE" Battery 2>&1)"; then
+    # Property genuinely absent => an older daemon predating Plan 02. Graceful
+    # skip (the GUI degrades to "—"); never fail the suite on an old daemon.
+    skip "Battery property not present (pre-Plan-02 daemon?) — detail: $(echo "$BATT_OUT" | head -1)"
+fi
+# Reply form: `y NNN` (uint8). Extract the numeric value.
+if ! echo "$BATT_OUT" | grep -qE '^y[[:space:]]+[0-9]+$'; then
+    fail "Battery is not a uint8 on ${FIRST} (got: ${BATT_OUT}) (DEV-02)"
+fi
+BATT_VAL=$(echo "$BATT_OUT" | awk '{print $2}')
+
+# Read BatteryKnown to decide whether the value must be in 0..100.
+if ! KNOWN_OUT="$(busctl --system get-property "$SERVICE" "$FIRST" "$DEVICE_IFACE" BatteryKnown 2>&1)"; then
+    skip "could not read BatteryKnown on ${FIRST}: $(echo "$KNOWN_OUT" | head -1)"
+fi
+if ! echo "$KNOWN_OUT" | grep -qE '^b[[:space:]]+(true|false)$'; then
+    fail "BatteryKnown is not a bool on ${FIRST} (got: ${KNOWN_OUT}) (DEV-02)"
+fi
+KNOWN_VAL=$(echo "$KNOWN_OUT" | awk '{print $2}')
+
+if [ "$KNOWN_VAL" = "true" ]; then
+    # Known battery => value MUST be a sane percentage.
+    if [ "$BATT_VAL" -lt 0 ] || [ "$BATT_VAL" -gt 100 ]; then
+        fail "Battery=${BATT_VAL} out of range 0..100 while BatteryKnown=true (DEV-02)"
+    fi
+    pass "Device Battery = ${BATT_VAL}% (BatteryKnown=true) (DEV-02)"
 else
-    echo "SKIP: Battery property not present yet (Plan 02 pending) — detail: $(echo "$BATT_OUT" | head -1)"
-    exit 0
+    # Unknown battery is legitimate — the GUI shows "—". Still a PASS.
+    pass "Device reports BatteryKnown=false (GUI shows \"—\") — legitimate (DEV-02)"
 fi
 
 pass "device-list smoke complete"

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Charging bolt overlay. Per UI-SPEC the charging bolt is ALWAYS Success
+     green regardless of battery level, so the fill is baked to the light-theme
+     Success green (#2BA84A); the dark-theme variant is close enough at this
+     glyph scale and avoids a runtime recolor dependency (Qt5Compat
+     GraphicalEffects is not a build prerequisite). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+     fill="#2BA84A" stroke="none">
+  <path d="M13 2 L5 13 H11 L9 22 L19 9 H13 Z"/>
+</svg>

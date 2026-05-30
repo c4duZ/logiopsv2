@@ -76,7 +76,9 @@ qt_add_qml_module(logiops-gui
             qml/states/AccessDeniedState.qml
         RESOURCES
             icons/mouse.svg
-            icons/keyboard.svg)
+            icons/keyboard.svg
+            icons/battery.svg
+            icons/charging.svg)
 
 # Theme.qml is a pragma-Singleton — register it as one so `Theme.x` resolves.
 set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)

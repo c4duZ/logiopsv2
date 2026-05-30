@@ -37,6 +37,8 @@
 #include <QtTest/QtTest>
 #include <QSignalSpy>
 
+#include <algorithm>
+
 #include "DeviceModel.h"   // Plan 03 deliverable (src/logiops-gui/DeviceModel.h)
 
 using logiops_gui::DeviceModel;
@@ -126,6 +128,41 @@ private slots:
         QCOMPARE(model.data(model.index(0), DeviceModel::BatteryPercentRole).toInt(), 80);
         QCOMPARE(model.data(model.index(0), DeviceModel::ChargingRole).toBool(), true);
         QCOMPARE(model.data(model.index(0), DeviceModel::BatteryKnownRole).toBool(), true);
+    }
+
+    // DEV-02 / CONF-03 (Plan 05 no-flicker contract): a battery tick emits ONE
+    // dataChanged carrying ONLY the battery roles (BatteryPercent/Charging/
+    // BatteryKnown), never a modelReset, and never reorders the row. This is the
+    // signal-driven, repaint-only-the-battery-block guarantee the delegate relies
+    // on (a battery update must not move/re-sort/blink the row).
+    void test_battery_noflicker() {
+        DeviceModel model;
+        const QString a = QStringLiteral("/pizza/pixl/logiops/devices/0");
+        const QString b = QStringLiteral("/pizza/pixl/logiops/devices/1");
+        model.onDeviceAdded(a, "First", kMousePid, true);
+        model.onDeviceAdded(b, "Second", kMousePid, true);
+
+        QSignalSpy changed(&model, &QAbstractItemModel::dataChanged);
+        QSignalSpy reset(&model, &QAbstractItemModel::modelReset);
+
+        model.onBatteryChanged(a, 80, /*charging=*/true, /*known=*/true);
+
+        QCOMPARE(changed.count(), 1);
+        const QList<QVariant> args = changed.takeFirst();
+        // dataChanged(topLeft, bottomRight, roles): roles is the 3rd argument.
+        QList<int> roles = args.at(2).value<QList<int>>();
+        std::sort(roles.begin(), roles.end());
+        QList<int> expected{DeviceModel::BatteryPercentRole,
+                            DeviceModel::ChargingRole,
+                            DeviceModel::BatteryKnownRole};
+        std::sort(expected.begin(), expected.end());
+        QCOMPARE(roles, expected);
+        QCOMPARE(reset.count(), 0);
+        // Only the changed row (row 0) is targeted; order unchanged.
+        QCOMPARE(args.at(0).value<QModelIndex>().row(), 0);
+        QCOMPARE(args.at(1).value<QModelIndex>().row(), 0);
+        QCOMPARE(model.data(model.index(0), DeviceModel::PathRole).toString(), a);
+        QCOMPARE(model.data(model.index(1), DeviceModel::PathRole).toString(), b);
     }
 
     // CONF-03: the model holds no rows except those from enumerate + signals.

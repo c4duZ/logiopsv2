@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generic battery outline glyph (horizontal). Tinted at use-site by binding
+     the Image color is not possible in plain Image, so the delegate draws the
+     fill/% color via QML primitives and uses this only as a neutral outline
+     fallback. stroke uses the muted foreground so an untinted render still reads. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke="#6B7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="2" y="8" width="16" height="9" rx="2"/>
+  <line x1="21" y1="11" x2="21" y2="14"/>
+</svg>

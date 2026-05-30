@@ -23,9 +23,23 @@ Item {
     // Dim per state: offline 55%, sleeping 70%, otherwise full (UI-SPEC).
     readonly property real stateOpacity: isOffline ? 0.55 : (isSleeping ? 0.70 : 1.0)
 
-    // Accessible: announce the device + live connection state to Orca/AT-SPI.
+    // Live battery roles (per-role bindings — a battery tick repaints ONLY the
+    // battery block, never moves/re-sorts the row; no-flicker contract UI-SPEC).
+    readonly property bool batteryKnown: model.batteryKnown
+    readonly property bool charging: model.charging
+    // T-02-15: clamp a spoofed/buggy out-of-range percentage to 0..100.
+    readonly property int batteryPercent: Math.max(0, Math.min(100, model.batteryPercent))
+    // Threshold color: >20% Success green, <=20% Warning amber (UI-SPEC). The
+    // charging bolt itself is always green regardless of level (handled below).
+    readonly property color batteryColor: batteryPercent > 20 ? Theme.charging : Theme.warning
+
+    // Accessible: announce the device + live connection AND battery state to
+    // Orca/AT-SPI; updates on every battery/connection change.
     Accessible.role: Accessible.ListItem
     Accessible.name: model.name + ", " +
+        (batteryKnown
+            ? (batteryPercent + qsTr(" percent") + (charging ? qsTr(", charging") : ""))
+            : qsTr("battery unknown")) + ", " +
         (isOffline ? qsTr("offline") : isSleeping ? qsTr("sleeping") : qsTr("online"))
     Accessible.selectable: true
     Accessible.selected: delegate.selected
@@ -110,12 +124,81 @@ Item {
             }
         }
 
-        // Battery block PLACEHOLDER — Plan 05 wires real battery. Show "—" muted.
-        Text {
-            text: "—"
-            color: Theme.mutedForeground
-            font.pixelSize: Theme.labelSize
-            font.weight: Theme.weightMedium
+        // Battery block (UI-SPEC anatomy 4): right-aligned battery glyph +
+        // numeric % (tabular, stable width) + charging bolt; threshold colors;
+        // "—" muted when unknown. Per-role bindings only -> a tick repaints just
+        // this block (no row move/re-sort, no-flicker contract).
+        RowLayout {
+            spacing: Theme.spacingXs
+
+            // --- Known battery: glyph + fill + % ---
+            // Battery glyph drawn as primitives so its outline/fill tints to the
+            // threshold color without a runtime ColorOverlay dependency.
+            Item {
+                Layout.preferredWidth: 22
+                Layout.preferredHeight: 12
+                visible: delegate.batteryKnown
+                // Outline body.
+                Rectangle {
+                    id: battBody
+                    anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                    width: 18; height: 11; radius: 2
+                    color: "transparent"
+                    border.width: 1.4
+                    border.color: delegate.batteryColor
+                    Behavior on border.color { ColorAnimation { duration: Theme.motionBase; easing.type: Theme.motionEasing } }
+                    // Fill proportional to % (clamped), inset 1.5px.
+                    Rectangle {
+                        anchors { left: parent.left; verticalCenter: parent.verticalCenter; leftMargin: 1.5 }
+                        height: parent.height - 3
+                        width: (parent.width - 3) * (delegate.batteryPercent / 100)
+                        radius: 1
+                        color: delegate.batteryColor
+                        Behavior on color { ColorAnimation { duration: Theme.motionBase; easing.type: Theme.motionEasing } }
+                        Behavior on width { NumberAnimation { duration: Theme.motionBase; easing.type: Theme.motionEasing } }
+                    }
+                }
+                // Positive terminal nub.
+                Rectangle {
+                    anchors { left: battBody.right; verticalCenter: parent.verticalCenter }
+                    width: 2; height: 5; radius: 1
+                    color: delegate.batteryColor
+                    Behavior on color { ColorAnimation { duration: Theme.motionBase; easing.type: Theme.motionEasing } }
+                }
+                // Charging bolt overlay — always green (UI-SPEC), level-independent.
+                Image {
+                    anchors.centerIn: parent
+                    width: 12; height: 12
+                    sourceSize.width: 12; sourceSize.height: 12
+                    source: "qrc:/logiops/gui/icons/charging.svg"
+                    fillMode: Image.PreserveAspectFit
+                    visible: delegate.charging
+                }
+            }
+            Text {
+                visible: delegate.batteryKnown
+                text: delegate.batteryPercent + "%"
+                color: delegate.batteryColor
+                font.pixelSize: Theme.labelSize
+                font.weight: Theme.weightMedium
+                // Stable width (no horizontal jitter as the number ticks) without
+                // relying on font.features — that is Qt 6.7+ and the target is
+                // 6.4.2 (UI-SPEC permits the fallback). Reserve the widest case
+                // ("100%") and right-align so 1-/2-/3-digit values don't shift.
+                Layout.preferredWidth: metrics.advanceWidth
+                horizontalAlignment: Text.AlignRight
+                TextMetrics { id: metrics; font: parent.font; text: "100%" }
+                Behavior on color { ColorAnimation { duration: Theme.motionBase; easing.type: Theme.motionEasing } }
+            }
+
+            // --- Unknown battery: "—" muted, no fill, no bolt, no warning color ---
+            Text {
+                visible: !delegate.batteryKnown
+                text: "—"
+                color: Theme.mutedForeground
+                font.pixelSize: Theme.labelSize
+                font.weight: Theme.weightMedium
+            }
         }
 
         // Status badge: only when not online-awake (Offline / Sleeping). Text

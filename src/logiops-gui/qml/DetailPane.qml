@@ -37,6 +37,10 @@ Rectangle {
             readonly property string rModel: model.model
             readonly property int rKind: model.deviceKind
             readonly property int rConn: model.connectionState
+            readonly property bool rBattKnown: model.batteryKnown
+            readonly property bool rCharging: model.charging
+            // T-02-15: clamp out-of-range percentage to 0..100.
+            readonly property int rBattPercent: Math.max(0, Math.min(100, model.batteryPercent))
             visible: false
         }
     }
@@ -109,7 +113,8 @@ Rectangle {
             font.pixelSize: Theme.bodySize
         }
 
-        // Battery section — STUB pending Plan 05 (battery display deferred).
+        // Battery section (read-only — no controls this phase, Fase 3). Numeric
+        // %/charging when known, muted "Battery status unavailable" otherwise.
         Text {
             text: qsTr("Battery")
             color: Theme.foreground
@@ -118,8 +123,18 @@ Rectangle {
             Layout.topMargin: Theme.spacingMd
         }
         Text {
-            text: "—"
-            color: Theme.mutedForeground
+            text: {
+                var it = pane.selectedItem();
+                if (!it) return "";
+                if (!it.rBattKnown) return qsTr("Battery status unavailable");
+                return it.rBattPercent + "%" + (it.rCharging ? qsTr(" — charging") : "");
+            }
+            // Threshold color when known (>20 green / <=20 amber); muted otherwise.
+            color: {
+                var it = pane.selectedItem();
+                if (!it || !it.rBattKnown) return Theme.mutedForeground;
+                return it.rBattPercent > 20 ? Theme.charging : Theme.warning;
+            }
             font.pixelSize: Theme.bodySize
         }
 
