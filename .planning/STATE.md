@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-05-30T19:25:54.279Z"
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-05-30T20:00:35.483Z"
 last_activity: 2026-05-30
 progress:
   total_phases: 9
   completed_phases: 1
   total_plans: 11
-  completed_plans: 8
-  percent: 73
+  completed_plans: 9
+  percent: 82
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 ## Current Position
 
 Phase: 2 (D-Bus Client & Device List) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-05-30
 
@@ -59,6 +59,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase 01 P05 | 5 | 2 tasks | 2 files |
 | Phase 01-access-path-daemon-hardening P06 | 3 | 3 tasks | 4 files |
 | Phase 02-d-bus-client-device-list P02 | 25 | 2 tasks | 8 files |
+| Phase 02 P03 | 18 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,7 @@ Recent decisions affecting current work:
 - [Phase 01]: [Phase 1]: ipcgull threads the D-Bus caller's unique bus name to handlers via thread_local current_caller() (set from gdbus_method_call sender under server_lock, cleared via RAII); g_debug proves threading. Property callbacks untouched. Unblocks polkit-gating save() (ACCESS-02 foundation, Plan 06).
 - [Phase 01-access-path-daemon-hardening]: [Phase 1]: Configuration::save() polkit-gated (action pizza.pixl.logiops.save-config, auth_admin_keep) via ipcgull::current_caller()+polkit_system_bus_name subject; fail-safe-DENY on null authority/subject/result/error/empty caller, throw before writeFile so /etc/logid.cfg stays byte-unchanged on denial; polkit-gobject-1 v124 linked, -Werror clean. Task 3 interactive verify (deny-unchanged + authorized-write-under-hardened-unit + ReadWritePaths file-vs-/etc) deferred to operator (ACCESS-02).
 - [Phase 02-d-bus-client-device-list]: [Phase 2]: Daemon battery added (HID++ 0x1000 wrapper + DeviceBattery feature + Battery/Charging/BatteryKnown property and BatteryChanged signal on .Device) — DEV-02 is now real signal-driven data, no polling (CONF-03). Scope held to 0x1000; 0x1004 UnifiedBattery deferred (newer mice may need it). Contradicts the earlier 'Phases 2-3 = zero daemon C++ changes' roadmap assumption.
+- [Phase 02-d-bus-client-device-list]: [Phase 2]: Typed qdbusxml2cpp proxies (PizzaPixlLogiOps{Devices,Device}Interface) + signal-driven DeviceModel (QAbstractListModel) landed; rows come ONLY from Enumerate+DeviceAdded/Removed/StatusChanged (CONF-03, no cache), StatusChanged emits per-role dataChanged for ConnectionStateRole only (no-flicker, stable nickname sort), beginResetModel reserved for clear()/reconnect. device_model+device_model_noflicker GREEN, -Werror clean. Battery slot/roles present-but-unwired (Plan 05). Caught: '--' and '<' in XML comments silently broke qdbusxml2cpp into empty proxies.
 
 ### Pending Todos
 
@@ -92,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-30T19:25:42.681Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-05-30T20:00:27.168Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None

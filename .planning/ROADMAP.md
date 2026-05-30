@@ -64,7 +64,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 5 plans
   - [x] 02-01-PLAN.md — Wave 0 harness: optional logiops-gui CMake target + RED device_model/battery_feature units + graceful-skip smoke scripts (DEV-01..04, CONF-03)
   - [x] 02-02-PLAN.md — Daemon battery feature: HID++ 0x1000 BatteryStatus wrapper + Battery/Charging D-Bus property + BatteryChanged signal (DEV-02)
-  - [ ] 02-03-PLAN.md — GUI typed D-Bus proxy + signal-driven DeviceModel (no cache, no-flicker) (DEV-01, DEV-03, DEV-04, CONF-03)
+  - [x] 02-03-PLAN.md — GUI typed D-Bus proxy + signal-driven DeviceModel (no cache, no-flicker) (DEV-01, DEV-03, DEV-04, CONF-03)
   - [ ] 02-04-PLAN.md — GUI shell: main + DaemonConnection (reconnect) + QML sidebar/detail + 4 screen states + theme (DEV-01, DEV-03, DEV-04, CONF-03)
   - [ ] 02-05-PLAN.md — GUI battery display wiring + live battery smoke (DEV-02)
 **UI hint**: yes
