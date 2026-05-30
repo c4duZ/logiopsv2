@@ -1,5 +1,6 @@
 /*
  * Copyright 2019-2023 PixlOne, michtere
+ * Adapted by c4duZ - https://github.com/c4duZ/logiopsv2
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
