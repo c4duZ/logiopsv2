@@ -15,6 +15,7 @@ Bring the **full Options+ experience to Linux** — the rich configuration UX th
 <!-- The logiops foundation this product builds on, plus capabilities delivered by completed phases. -->
 
 - ✓ Non-root D-Bus access path: system-bus policy relaxed to a `logiops` group (own=root), `save()` polkit-gated (`auth_admin_keep`, fail-safe deny), systemd hardening, HID report length-checks — Phase 1 (code complete & statically verified; 4 runtime items pending human validation in `01-HUMAN-UAT.md`)
+- ✓ Qt 6/QML GUI app shell (optional CMake target `src/logiops-gui/`) with a live, signal-driven device list (name, battery, connection), daemon-as-single-source-of-truth, reconnect, and 4 screen states; plus a new daemon battery feature (HID++ 0x1000 BatteryStatus + 0x1004 UnifiedBattery, prefers 0x1004) exposed over D-Bus — Phase 2 (code complete & statically verified, build clean -Werror, 5/5 tests; 6 runtime items pending human validation in `02-HUMAN-UAT.md`, incl. installing `qml6-module-qtquick` to run the GUI)
 
 - ✓ HID++ 1.0/2.0 communication with Logitech devices over `hidraw` — existing (`src/logid/backend/`)
 - ✓ Device discovery + hotplug via udev, incl. Unifying receivers — existing (`src/logid/backend/raw/DeviceMonitor.cpp`, `hidpp10/ReceiverMonitor.cpp`)
@@ -96,4 +97,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-30 after Phase 1 (Access Path & Daemon Hardening) — code complete, human validation pending*
+*Last updated: 2026-05-30 after Phase 2 (D-Bus Client & Device List) — code complete, human validation pending*
