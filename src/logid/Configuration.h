@@ -50,6 +50,10 @@ namespace logid {
         };
 
     private:
+        // Returns true only if the D-Bus caller is authorized (via polkit) to save the
+        // configuration. Fail-safe DENY on every error/null/empty-caller path.
+        static bool checkSaveAuthorized(const std::string& callerBusName);
+
         std::string _config_file;
         libconfig::Config _config;
     };
