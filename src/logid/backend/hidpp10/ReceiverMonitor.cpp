@@ -37,6 +37,8 @@ void ReceiverMonitor::_ready() {
     if (_connect_ev_handler.empty()) {
         _connect_ev_handler = _receiver->rawDevice()->addEventHandler(
                 {[](const std::vector<uint8_t>& report) -> bool {
+                    if (!hasHidppHeader(report))
+                        return false;
                     if (report[Offset::Type] == Report::Type::Short ||
                         report[Offset::Type] == Report::Type::Long) {
                         uint8_t sub_id = report[Offset::SubID];
@@ -163,6 +165,8 @@ void ReceiverMonitor::waitForDevice(hidpp::DeviceIndex index) {
     if (!_waiters.count(index)) {
         _waiters.emplace(index, _receiver->rawDevice()->addEventHandler(
                 {[index](const std::vector<uint8_t>& report) -> bool {
+                    if (!hasHidppHeader(report))
+                        return false;
                     /* Connection events should be handled by connect_ev_handler */
                     auto sub_id = report[Offset::SubID];
                     return report[Offset::DeviceIndex] == index &&

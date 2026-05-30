@@ -131,6 +131,11 @@ namespace logid::backend::hidpp {
     private:
         std::vector<uint8_t> _data;
     };
+
+    // Returns true if `report` is long enough to safely read the HID++ header.
+    inline bool hasHidppHeader(const std::vector<uint8_t>& report) {
+        return report.size() >= Report::HeaderLength;   // 4 bytes: Type,Index,SubID/Feature,Addr/Func
+    }
 }
 
 #endif //LOGID_BACKEND_HIDPP_REPORT_H
