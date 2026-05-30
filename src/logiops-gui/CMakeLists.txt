@@ -101,7 +101,19 @@ qt_add_qml_module(logiops-gui
             icons/mouse.svg
             icons/keyboard.svg
             icons/battery.svg
-            icons/charging.svg)
+            icons/charging.svg
+            icons/keystroke.svg
+            icons/dpi.svg
+            icons/host.svg
+            icons/profile.svg
+            icons/smartshift.svg
+            icons/hires.svg
+            icons/thumbwheel.svg
+            icons/disabled.svg
+            icons/save.svg
+            icons/restore.svg
+            icons/add.svg
+            icons/remove.svg)
 
 # Theme.qml is a pragma-Singleton — register it as one so `Theme.x` resolves.
 set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
