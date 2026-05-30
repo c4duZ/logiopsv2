@@ -1,0 +1,37 @@
+/*
+ * Copyright 2022 PixlOne
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+#ifndef IPCGULL_CONNECTION_H
+#define IPCGULL_CONNECTION_H
+
+#include <string>
+
+namespace ipcgull {
+    enum connection_mode {
+        IPCGULL_SYSTEM,
+        IPCGULL_USER,
+        IPCGULL_STARTER
+    };
+
+    // Returns the unique bus name (e.g. ":1.42") of the D-Bus caller for the method call
+    // currently being dispatched on this thread. Returns an empty string when called outside
+    // an active method-call dispatch. Valid only for the duration of the handler invocation.
+    std::string current_caller();
+}
+
+#endif //IPCGULL_CONNECTION_H
