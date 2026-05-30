@@ -58,3 +58,9 @@ endif()
 
 add_subdirectory(src/ipcgull)
 add_subdirectory(src/logid)
+
+option(BUILD_TESTING "Build the logiops test suite" ON)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(test)
+endif()
