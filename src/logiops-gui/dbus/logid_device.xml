@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <!--
+    Trimmed introspection for the daemon's per-device pizza.pixl.LogiOps.Device
+    interface (lives on /pizza/pixl/logiops/devices/N). Hand-authored from the
+    VERIFIED D-Bus surface (02-RESEARCH.md). Dev-time reference: introspect
+    pizza.pixl.LogiOps at /pizza/pixl/logiops/devices/0 via busctl (xml-interface).
+
+    Name (s, DEV-04), ProductID (q/uint16, mouse-vs-keyboard icon), Active
+    (b, true=awake/false=sleeping, DEV-03) and the StatusChanged(b) signal exist
+    in the daemon today.
+
+    NOTE: the daemon's Battery/Charging/BatteryKnown properties + BatteryChanged
+    signal (added in Plan 02) are intentionally NOT included in this XML yet.
+    Plan 05 adds them here once it wires the DeviceModel battery slot to the live
+    signal; this plan keeps the proxy/model battery surface unwired-but-present.
+  -->
+  <interface name="pizza.pixl.LogiOps.Device">
+    <property name="Name" type="s" access="read"/>
+    <property name="ProductID" type="q" access="read"/>
+    <property name="Active" type="b" access="read"/>
+    <signal name="StatusChanged">
+      <arg name="active" type="b"/>
+    </signal>
+  </interface>
+</node>

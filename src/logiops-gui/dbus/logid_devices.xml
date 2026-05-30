@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <!--
+    Trimmed introspection for the daemon's pizza.pixl.LogiOps.Devices interface
+    (lives on the root node /pizza/pixl/logiops). Hand-authored from the VERIFIED
+    D-Bus surface (02-RESEARCH.md "The Exact D-Bus Surface"). Dev-time reference:
+    introspect pizza.pixl.LogiOps at /pizza/pixl/logiops via busctl (xml-interface).
+
+    ipcgull marshals a shared object pointer to an object path (o) and a vector of
+    them to ao, so Enumerate returns QList of QDBusObjectPath and the add/remove
+    signals each carry a single QDBusObjectPath.
+  -->
+  <interface name="pizza.pixl.LogiOps.Devices">
+    <method name="Enumerate">
+      <arg name="devices" type="ao" direction="out"/>
+    </method>
+    <signal name="DeviceAdded">
+      <arg name="device" type="o"/>
+    </signal>
+    <signal name="DeviceRemoved">
+      <arg name="device" type="o"/>
+    </signal>
+  </interface>
+</node>
