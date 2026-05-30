@@ -5,10 +5,16 @@
 # find_package + BUILD_GUI option). The daemon therefore builds with no Qt
 # dependency at all when Qt6 is absent or -DBUILD_GUI=OFF is passed.
 #
-# Wave 0 scaffold only: a static `logiops-gui-lib` that test/DeviceModelTest
-# links against. It carries no real sources yet — Plan 03 adds DeviceModel.{h,cpp}
-# (the QAbstractListModel device model) and Plan 04 adds main.cpp + the QML module
-# + the `logiops-gui` executable.
+# Two targets:
+#   - logiops-gui-lib (STATIC): DeviceModel (Plan 03) + DaemonConnection (Plan 04)
+#     + the generated D-Bus proxies. test/DeviceModelTest links this lean lib.
+#   - logiops-gui (EXECUTABLE, Plan 04): QGuiApplication + QQmlApplicationEngine +
+#     the qt_add_qml_module shell (Main + four state screens + Theme singleton).
+#
+# Runtime note: the GUI needs the BASE QtQuick QML module at run time
+# (qml6-module-qtquick on Debian/Ubuntu) in addition to qtquick-controls/-layouts;
+# without it the engine reports `module "QtQuick" is not installed` even though
+# the binary builds. This is an operator prerequisite, documented in the SUMMARY.
 project(logiops-gui)
 
 # Qt meta-object / resource compilers (the model is a QObject with Q_OBJECT).
@@ -34,15 +40,46 @@ qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_device.xml  logid_device_proxy)
 add_library(logiops-gui-lib STATIC)
 target_sources(logiops-gui-lib PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/DeviceModel.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/DaemonConnection.cpp
         ${GUI_DBUS_SRCS})
-target_link_libraries(logiops-gui-lib PUBLIC Qt6::Core Qt6::DBus)
-# Source dir for DeviceModel.h; binary dir for the qdbusxml2cpp-generated proxy
-# headers (qt_add_dbus_interface writes them into CMAKE_CURRENT_BINARY_DIR).
+# Qt6::Gui for QGuiApplication::clipboard() (the access-denied Copy CTA). The lib
+# stays free of Qt6::Quick/Qml so the model/connection unit test links lean.
+target_link_libraries(logiops-gui-lib PUBLIC Qt6::Core Qt6::DBus Qt6::Gui)
+# Source dir for DeviceModel.h / DaemonConnection.h; binary dir for the
+# qdbusxml2cpp-generated proxy headers (qt_add_dbus_interface writes them into
+# CMAKE_CURRENT_BINARY_DIR); logid source dir for ipc_defs.h (reuse the daemon's
+# bus-name / root-path constants instead of hardcoding).
 target_include_directories(logiops-gui-lib PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_BINARY_DIR})
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_SOURCE_DIR}/src/logid)
 
-# Plan 04 adds the `logiops-gui` executable target here:
-#   add_executable(logiops-gui main.cpp ...)  +  qt_add_qml_module(...)
-#   target_link_libraries(logiops-gui PRIVATE logiops-gui-lib Qt6::Quick Qt6::Qml Qt6::Svg)
-# (deferred — Wave 0 ships the lib only).
+# The running app: QGuiApplication + QQmlApplicationEngine, the QML module
+# (Main shell + four state screens + Theme singleton), and the mouse/keyboard
+# icons. main.cpp constructs DeviceModel + DaemonConnection and registers them
+# as context properties; QML renders only (zero business logic in JS).
+qt_add_executable(logiops-gui main.cpp)
+target_link_libraries(logiops-gui PRIVATE
+        logiops-gui-lib Qt6::Gui Qt6::Quick Qt6::Qml Qt6::Svg)
+
+qt_add_qml_module(logiops-gui
+        URI logiops.gui
+        VERSION 1.0
+        QML_FILES
+            qml/Main.qml
+            qml/DeviceList.qml
+            qml/DeviceDelegate.qml
+            qml/DetailPane.qml
+            qml/states/EmptyState.qml
+            qml/states/LoadingState.qml
+            qml/states/DaemonDownState.qml
+            qml/states/AccessDeniedState.qml
+        RESOURCES
+            icons/mouse.svg
+            icons/keyboard.svg)
+
+# Theme.qml is a pragma-Singleton — register it as one so `Theme.x` resolves.
+set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+qt_target_qml_sources(logiops-gui QML_FILES qml/Theme.qml)
+
+install(TARGETS logiops-gui RUNTIME DESTINATION bin)
