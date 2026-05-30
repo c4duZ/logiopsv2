@@ -17,6 +17,8 @@
  *
  */
 #include "DaemonConnection.h"
+#include "DeviceController.h"
+#include "DeviceControllerFactory.h"
 #include "DeviceModel.h"
 
 #include <QGuiApplication>
@@ -37,10 +39,17 @@ int main(int argc, char* argv[]) {
     logiops_gui::DeviceModel model;
     // The connection drives the model from the daemon's live D-Bus signals.
     logiops_gui::DaemonConnection daemon(&model);
+    // Owns the per-selected-device DeviceController; QML calls selectDevice(path)
+    // on selection and binds the config shell to its `controller` property (the
+    // factory builds + introspects a fresh controller per device). QML renders
+    // only — capability discovery + marshalling stay in C++ (CONTEXT.md).
+    logiops_gui::DeviceControllerFactory controllerFactory;
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty(QStringLiteral("deviceModel"), &model);
     engine.rootContext()->setContextProperty(QStringLiteral("daemon"), &daemon);
+    engine.rootContext()->setContextProperty(QStringLiteral("deviceControllerFactory"),
+                                             &controllerFactory);
 
     // Load the shell from the qt_add_qml_module resource. Qt 6.4.2 has no
     // QQmlApplicationEngine::loadFromModule (that is 6.5+), so load the module's
