@@ -23,10 +23,10 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 
 ### Button Remapping
 
-- [ ] **BTN-01**: User can click a button on a visual device representation and reassign its action
+- [x] **BTN-01**: User can click a button on a visual device representation and reassign its action
 - [x] **BTN-02**: User can assign a keystroke/shortcut to a button via a key-capture widget
-- [ ] **BTN-03**: User can assign built-in actions to a button (DPI change/cycle, host switch, profile switch, SmartShift/hi-res toggles)
-- [ ] **BTN-04**: User can see at a glance what each button is currently bound to
+- [x] **BTN-03**: User can assign built-in actions to a button (DPI change/cycle, host switch, profile switch, SmartShift/hi-res toggles)
+- [x] **BTN-04**: User can see at a glance what each button is currently bound to
 
 ### Pointer / DPI
 
@@ -42,7 +42,7 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 
 ### Multi-Host
 
-- [ ] **HOST-01**: User can assign an Easy-Switch (change-host) action to a button to hop between paired computers
+- [x] **HOST-01**: User can assign an Easy-Switch (change-host) action to a button to hop between paired computers
 
 ### Gestures (priority differentiator)
 
@@ -123,17 +123,17 @@ Which phases cover which requirements. Populated during roadmap creation.
 | DEV-03 | Phase 2 | Complete |
 | DEV-04 | Phase 2 | Complete |
 | CONF-03 | Phase 2 | Complete |
-| BTN-01 | Phase 3 | Pending |
+| BTN-01 | Phase 3 | Complete |
 | BTN-02 | Phase 3 | Complete |
-| BTN-03 | Phase 3 | Pending |
-| BTN-04 | Phase 3 | Pending |
+| BTN-03 | Phase 3 | Complete |
+| BTN-04 | Phase 3 | Complete |
 | DPI-01 | Phase 3 | Complete |
 | DPI-02 | Phase 3 | Pending |
 | DPI-03 | Phase 3 | Pending |
 | SCR-01 | Phase 3 | Complete |
 | SCR-02 | Phase 3 | Complete |
 | SCR-03 | Phase 3 | Complete |
-| HOST-01 | Phase 3 | Pending |
+| HOST-01 | Phase 3 | Complete |
 | PROF-01 | Phase 3 | Pending |
 | CONF-01 | Phase 3 | Complete |
 | CONF-02 | Phase 3 | Pending |

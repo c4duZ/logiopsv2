@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-01-PLAN.md (DeviceController + tabbed shell, UI-01 spine)
-last_updated: "2026-05-30T23:14:52.491Z"
+stopped_at: Completed 03-02-PLAN.md (Buttons tab — reassign + key-capture + host switch); Task 3 on-hardware verify pending
+last_updated: "2026-05-30T23:32:57.887Z"
 last_activity: 2026-05-30
 progress:
   total_phases: 9
   completed_phases: 2
   total_plans: 16
-  completed_plans: 13
-  percent: 81
+  completed_plans: 14
+  percent: 88
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 ## Current Position
 
 Phase: 03 (Core Config UI & Persistence) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-05-30
 
@@ -65,6 +65,7 @@ Progress: [███████▌░░] 75%
 | Phase 02-d-bus-client-device-list P05 | 18 | 2 tasks | 9 files |
 | Phase 03-core-config-ui-persistence P00 | 66 | 3 tasks | 16 files |
 | Phase 03-core-config-ui-persistence P01 | 8 | 3 tasks | 27 files |
+| Phase 03-core-config-ui-persistence P02 | 18 | 2 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,7 @@ Recent decisions affecting current work:
 - [Phase 03-core-config-ui-persistence]: [Phase 3]: CONF-01 BLOCKING gate satisfied — phase3_save_roundtrip proves Configuration::save() serialization (config::set+writeFile) round-trips device-block count + values with no loss; comment/formatting loss accepted. phase3_save_unknownkey proves schema-unknown keys drop without crash (T-3-00-02). Tests link ipcgull_static+config++, compile config.cpp directly on a temp cfg (no bus/polkit, never /etc).
 - [Phase 03-core-config-ui-persistence]: [Phase 3]: KeyNameMapper (BTN-02) maps Qt key/modifier->libevdev KEY_* (modifiers->LEFT*, letters/digits/F-keys algorithmic, table for rest); Escape+unknown->empty (T-3-00-03 no guessed token). Seven typed D-Bus proxies generated (qt_add 2->9) covering full Phase 3 config surface; ai out-arg needs QtTypeName.Out0=QList<int> annotation. Wave 1/2 are pure assembly.
 - [Phase 03-core-config-ui-persistence]: DeviceController per-device QObject discovers capabilities via D-Bus Introspect (present-interface set -> lazy typed proxies, mirroring daemon _addFeature), exposes capability flags + live-value Q_PROPERTYs with optimistic async setters; DeviceControllerFactory owns/swaps it on selection (single context property). Tabbed DetailPane: header + sliding accent TabBar + cross-fading ConfigTabs StackLayout with whole-tab capability omission (UI-01). Phase 3 Theme tokens + 12 glyphs landed. phase3_device_controller + full suite 9/9 GREEN.
+- [Phase 03-core-config-ui-persistence]: [Phase 3]: Buttons tab landed (BTN-01..04, HOST-01) — ButtonsModel does the strict two-step async reassign (SetAction then .Action.<type> param setter) over .Buttons/.Button, CID-keyed; setChangeHost pre-validates 1..N/next/prev before the D-Bus call (T-3-02-02 stoi DoS guard, unit-asserted). HOST-01 via option-a: exposed read-only daemon ChangeHost.GetHostCount (-Werror clean); GUI seeds host slots from it. QML: synced DeviceRender+BindingList + non-modal ReassignPanel (7 categories, live key-capture, device-driven host slots). ButtonsModel owned by DeviceControllerFactory (per-device swap); KeyNameMapper exposed to QML via keyNames bridge. 10/10 CTest GREEN. On-hardware reassign/key-capture/host-switch deferred to phase gate.
 
 ### Pending Todos
 
@@ -104,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-30T23:14:46.768Z
-Stopped at: Completed 03-01-PLAN.md (DeviceController + tabbed shell, UI-01 spine)
+Last session: 2026-05-30T23:32:34.440Z
+Stopped at: Completed 03-02-PLAN.md (Buttons tab — reassign + key-capture + host switch); Task 3 on-hardware verify pending
 Resume file: None
