@@ -57,12 +57,29 @@ namespace logid::features {
 
             void setDPI(uint16_t dpi, uint8_t sensor);
 
+            // Device/profile-scoped DPI-cycle presets (DPI-02 / DPI-03). Returned
+            // as two PARALLEL arrays — values[i] pairs with labels[i] — so the
+            // wire signature stays plain arrays (au/as), exactly like GetDPIs'
+            // proven ai out-arg, instead of an array-of-struct. Both the value AND
+            // the label persist via Save(). The standalone Pointer-tab editor has
+            // no button context, so these live on the Profile (option-a) rather
+            // than a per-button CycleDPI action.
+            [[nodiscard]] std::tuple<std::vector<uint32_t>, std::vector<std::string>>
+            getPresets() const;
+
+            void setPresets(const std::vector<uint32_t>& values,
+                            const std::vector<std::string>& labels);
+
         private:
             DPI& _parent;
         };
 
         mutable std::shared_mutex _config_mutex;
         std::reference_wrapper<std::optional<config::DPI>> _config;
+        // Reference to the active profile's DPI-cycle preset list (option-a). Held
+        // alongside _config and re-pointed in setProfile() so SetPresets writes the
+        // node Save() serializes.
+        std::reference_wrapper<std::optional<std::list<config::DpiPreset>>> _presets;
         std::shared_ptr<backend::hidpp20::AdjustableDPI> _adjustable_dpi;
         mutable std::shared_mutex _dpi_list_mutex;
         std::vector<backend::hidpp20::AdjustableDPI::SensorDPIList> _dpi_lists;

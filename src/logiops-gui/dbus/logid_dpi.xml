@@ -27,5 +27,22 @@
     <method name="GetSensors">
       <arg name="sensors" type="y" direction="out"/>
     </method>
+    <!--
+      DPI cycle presets (DPI-02 / DPI-03, option-a). Device/profile-scoped
+      {value,label} preset list, exposed as two PARALLEL arrays: values[i] pairs
+      with labels[i]. au = array uint32 (values), as = array string (labels). The
+      au out-arg needs an explicit QtTypeName so qdbusxml2cpp emits a QList<uint>
+      (the bare ai pattern from GetDPIs). Both value AND label persist via Save().
+    -->
+    <method name="GetPresets">
+      <arg name="values" type="au" direction="out"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QList&lt;uint&gt;"/>
+      <arg name="labels" type="as" direction="out"/>
+    </method>
+    <method name="SetPresets">
+      <arg name="values" type="au" direction="in"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList&lt;uint&gt;"/>
+      <arg name="labels" type="as" direction="in"/>
+    </method>
   </interface>
 </node>

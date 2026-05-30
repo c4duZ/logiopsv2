@@ -24,6 +24,8 @@
 #include <QObject>
 #include <QSet>
 #include <QString>
+#include <QVariantList>
+#include <QVariantMap>
 
 class PizzaPixlLogiOpsDPIInterface;
 class PizzaPixlLogiOpsSmartShiftInterface;
@@ -85,6 +87,10 @@ class DeviceController : public QObject {
 
     // --- Live config values (two-way bound by the Wave-2 tab plans). ---
     Q_PROPERTY(int dpi READ dpi NOTIFY dpiChanged)
+    // DPI-cycle presets: a list of {value:int, label:string} maps the Pointer-tab
+    // editor binds to (DPI-02 / DPI-03). Device/profile-scoped via .DPI
+    // GetPresets/SetPresets (option-a, Task 0).
+    Q_PROPERTY(QVariantList dpiPresets READ dpiPresets NOTIFY dpiPresetsChanged)
     Q_PROPERTY(bool smartShiftActive READ smartShiftActive NOTIFY smartShiftChanged)
     Q_PROPERTY(int smartShiftThreshold READ smartShiftThreshold NOTIFY smartShiftChanged)
     Q_PROPERTY(int smartShiftTorque READ smartShiftTorque NOTIFY smartShiftChanged)
@@ -118,6 +124,7 @@ public:
     [[nodiscard]] int hostCount() const { return _hostCount; }
 
     [[nodiscard]] int dpi() const { return _dpi; }
+    [[nodiscard]] QVariantList dpiPresets() const { return _dpiPresets; }
     [[nodiscard]] bool smartShiftActive() const { return _smartShiftActive; }
     [[nodiscard]] int smartShiftThreshold() const { return _smartShiftThreshold; }
     [[nodiscard]] int smartShiftTorque() const { return _smartShiftTorque; }
@@ -129,6 +136,17 @@ public:
     // --- Optimistic setters (live-apply). Emit the change immediately, then
     // fire the async D-Bus setter; QML never blocks. ---
     Q_INVOKABLE void setDpi(int dpi);
+
+    // --- DPI-cycle preset editing (DPI-02 / DPI-03). Each mutator updates the
+    // local model (emits dpiPresetsChanged) and pushes the FULL {value,label} list
+    // to the daemon via .DPI.SetPresets (so values persist device-scoped and
+    // labels live in the same schema list). Values clamp to [dpiMin,dpiMax] before
+    // emit when bounds are known (defense in depth; the daemon also snaps). ---
+    Q_INVOKABLE void addPreset(int dpi, const QString& label);
+    Q_INVOKABLE void removePreset(int index);
+    Q_INVOKABLE void setPresetLabel(int index, const QString& label);
+    Q_INVOKABLE void setPresetValue(int index, int dpi);
+
     Q_INVOKABLE void setSmartShiftActive(bool active);
     Q_INVOKABLE void setSmartShiftThreshold(int threshold);
     Q_INVOKABLE void setSmartShiftTorque(int torque);
@@ -147,6 +165,9 @@ public:
     // Seed the capability/value caches directly (the live path calls these from
     // the async Get* replies; the test calls them with fakes).
     void seedDpiBounds(const QList<int>& dpis, int step, bool isRange, int sensorCount);
+    // Seed the preset model from the daemon's GetPresets reply (parallel arrays)
+    // or an injected test fixture. Emits dpiPresetsChanged.
+    void seedPresets(const QList<uint>& values, const QStringList& labels);
     void seedTorqueSupport(bool supported);
     void seedSmartShift(bool active, int threshold, int torque);
     void seedHires(bool hires, bool invert);
@@ -156,6 +177,7 @@ public:
 signals:
     void capabilitiesChanged();
     void dpiChanged();
+    void dpiPresetsChanged();
     void smartShiftChanged();
     void hiresChanged();
     void thumbChanged();
@@ -166,8 +188,20 @@ protected:
     virtual void introspectInterfaces();
     // Issue the async seed reads for whichever feature proxies now exist.
     void readInitialValues();
+    // Push the current preset model to the daemon as the two parallel
+    // {values,labels} arrays (.DPI.SetPresets). Virtual so DpiCycleTest can record
+    // the EXACT payload (the actual persistence path) with no live bus; the live
+    // override issues the async D-Bus call.
+    virtual void pushPresets(const QList<uint>& values, const QStringList& labels);
 
 private:
+    // Re-derive _dpiPresets from the local store and emit dpiPresetsChanged, then
+    // push to the daemon via pushPresets().
+    void syncPresets();
+    // Rebuild the QML-facing _dpiPresets projection from the parallel stores.
+    void rebuildPresetModel();
+    // Clamp a DPI value to [dpiMin,dpiMax] when bounds are known (T-3-03-01).
+    [[nodiscard]] int _clampDpi(int dpi) const;
     void buildProxies();
 
     QString _devicePath;
@@ -193,6 +227,11 @@ private:
 
     // Live-value cache.
     int _dpi = 0;
+    // DPI-cycle preset store: parallel value/label vectors are the source of
+    // truth; _dpiPresets is the QML-facing {value,label}-map projection.
+    QList<int> _presetValues;
+    QStringList _presetLabels;
+    QVariantList _dpiPresets;
     bool _smartShiftActive = false;
     int _smartShiftThreshold = 0;
     int _smartShiftTorque = 0;

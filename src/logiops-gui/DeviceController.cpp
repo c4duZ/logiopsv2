@@ -146,6 +146,14 @@ void DeviceController::readInitialValues() {
             }
             dw->deleteLater();
         });
+        // DPI-cycle presets (DPI-02 / DPI-03) — two parallel arrays.
+        auto* pw = new QDBusPendingCallWatcher(_dpiProxy->GetPresets(), this);
+        connect(pw, &QDBusPendingCallWatcher::finished, this, [this, pw]() {
+            QDBusPendingReply<QList<uint>, QStringList> r = *pw;
+            if (!r.isError())
+                seedPresets(r.argumentAt<0>(), r.argumentAt<1>());
+            pw->deleteLater();
+        });
     }
 
     // SmartShift config + torque support.
@@ -238,8 +246,105 @@ void DeviceController::setDpi(int dpi) {
         _dpi = dpi;
         emit dpiChanged();
     }
-    if (_dpiProxy != nullptr)
+    // No GUI-side rounding: hand the raw value to the daemon, which snaps via
+    // getClosestDPI (DPI.cpp). We DO re-read GetDPI to reflect the snapped value.
+    if (_dpiProxy != nullptr) {
         _dpiProxy->SetDPI(static_cast<ushort>(dpi), 0);
+        auto* w = new QDBusPendingCallWatcher(_dpiProxy->GetDPI(0), this);
+        connect(w, &QDBusPendingCallWatcher::finished, this, [this, w]() {
+            QDBusPendingReply<ushort> r = *w;
+            if (!r.isError() && _dpi != static_cast<int>(r.value())) {
+                _dpi = r.value();
+                emit dpiChanged();
+            }
+            w->deleteLater();
+        });
+    }
+}
+
+// --- DPI-cycle preset model + persistence (DPI-02 / DPI-03, option-a). ---
+
+int DeviceController::_clampDpi(int dpi) const {
+    // Defense in depth (T-3-03-01): clamp to [dpiMin,dpiMax] when bounds are known
+    // before the value ever reaches the daemon. The daemon also snaps.
+    if (_dpiMin > 0 && dpi < _dpiMin)
+        return _dpiMin;
+    if (_dpiMax > 0 && dpi > _dpiMax)
+        return _dpiMax;
+    return dpi;
+}
+
+void DeviceController::seedPresets(const QList<uint>& values, const QStringList& labels) {
+    _presetValues.clear();
+    _presetLabels.clear();
+    for (int i = 0; i < values.size(); ++i) {
+        _presetValues.append(static_cast<int>(values.at(i)));
+        _presetLabels.append(i < labels.size() ? labels.at(i) : QString());
+    }
+    rebuildPresetModel();
+    emit dpiPresetsChanged();
+}
+
+void DeviceController::rebuildPresetModel() {
+    _dpiPresets.clear();
+    for (int i = 0; i < _presetValues.size(); ++i) {
+        QVariantMap m;
+        m.insert(QStringLiteral("value"), _presetValues.at(i));
+        m.insert(QStringLiteral("label"),
+                 i < _presetLabels.size() ? _presetLabels.at(i) : QString());
+        _dpiPresets.append(m);
+    }
+}
+
+void DeviceController::syncPresets() {
+    rebuildPresetModel();
+    emit dpiPresetsChanged();
+    // Push the FULL {values,labels} list to the daemon (.DPI.SetPresets) — the
+    // actual device-scoped persistence path (option-a), NOT a per-button action.
+    QList<uint> values;
+    values.reserve(_presetValues.size());
+    for (int v : _presetValues)
+        values.append(static_cast<uint>(v));
+    pushPresets(values, _presetLabels);
+}
+
+void DeviceController::pushPresets(const QList<uint>& values, const QStringList& labels) {
+    if (_dpiProxy != nullptr)
+        _dpiProxy->SetPresets(values, labels);
+}
+
+void DeviceController::addPreset(int dpi, const QString& label) {
+    _presetValues.append(_clampDpi(dpi));
+    _presetLabels.append(label);
+    syncPresets();
+}
+
+void DeviceController::removePreset(int index) {
+    if (index < 0 || index >= _presetValues.size())
+        return;
+    _presetValues.removeAt(index);
+    if (index < _presetLabels.size())
+        _presetLabels.removeAt(index);
+    syncPresets();
+}
+
+void DeviceController::setPresetLabel(int index, const QString& label) {
+    if (index < 0 || index >= _presetLabels.size())
+        return;
+    if (_presetLabels.at(index) == label)
+        return;
+    _presetLabels[index] = label;
+    syncPresets();
+}
+
+void DeviceController::setPresetValue(int index, int dpi) {
+    if (index < 0 || index >= _presetValues.size())
+        return;
+    const int clamped = _clampDpi(dpi);
+    if (_presetValues.at(index) == clamped)
+        return;
+    _presetValues[index] = clamped;
+    syncPresets();
 }
 
 void DeviceController::setSmartShiftActive(bool active) {

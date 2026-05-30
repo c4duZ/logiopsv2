@@ -274,6 +274,19 @@ namespace logid::config {
 
     typedef std::variant<int, std::list<int>> DPI;
 
+    // A single device/profile-scoped DPI-cycle preset: a sensitivity VALUE plus an
+    // optional human LABEL (DPI-02 / DPI-03). The standalone Pointer-tab cycle
+    // editor has no button context, so the preset list lives device-scoped on the
+    // Profile (option-a, Task 0) rather than silently on a per-button CycleDPI
+    // action; both the value AND the label persist through Configuration::save().
+    struct DpiPreset : public group {
+        int value = 0;
+        std::optional<std::string> label;
+
+        DpiPreset() : group({"value", "label"},
+                            &DpiPreset::value, &DpiPreset::label) {}
+    };
+
     struct ThumbWheel : public group {
         std::optional<bool> divert;
         std::optional<bool> invert;
@@ -295,14 +308,18 @@ namespace logid::config {
 
     struct Profile : public group {
         std::optional<DPI> dpi;
+        // Device/profile-scoped DPI-cycle presets (value + optional label), the
+        // home for the Pointer-tab cycle editor (DPI-02 / DPI-03, option-a).
+        std::optional<std::list<DpiPreset>> dpi_presets;
         std::optional<SmartShift> smartshift;
         std::optional<std::variant<bool, HiresScroll>> hiresscroll;
         std::optional<ThumbWheel> thumbwheel;
         std::optional<RemapButton> buttons;
 
-        Profile() : group({"dpi", "smartshift", "hiresscroll",
+        Profile() : group({"dpi", "dpi_presets", "smartshift", "hiresscroll",
                            "buttons", "thumbwheel"},
-                          &Profile::dpi, &Profile::smartshift,
+                          &Profile::dpi, &Profile::dpi_presets,
+                          &Profile::smartshift,
                           &Profile::hiresscroll, &Profile::buttons,
                           &Profile::thumbwheel) {}
     };

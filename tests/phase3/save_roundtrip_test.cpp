@@ -41,7 +41,9 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <variant>
+#include <vector>
 
 using namespace logid;
 using namespace logid::config;
@@ -71,6 +73,11 @@ devices: (
             invert: false;
             target: false;
         };
+        dpi_presets: (
+            { value: 800;  label: "Low"; },
+            { value: 1600; label: "Medium"; },
+            { value: 3200; label: "High"; }
+        );
         buttons: (
             {
                 cid: 0xc4;
@@ -150,6 +157,17 @@ unsigned int smartshiftThresholdOf(const Profile& p) {
     return p.smartshift->threshold.value();
 }
 
+// Snapshot the DPI-cycle presets as (value,label) pairs in cfg order, so the test
+// can prove BOTH the VALUE and the LABEL of each preset survive a Save round-trip
+// (DPI-02 / DPI-03, option-a device/profile-scoped preset list).
+std::vector<std::pair<int, std::string>> presetsOf(const Profile& p) {
+    std::vector<std::pair<int, std::string>> out;
+    if (p.dpi_presets.has_value())
+        for (const auto& preset : p.dpi_presets.value())
+            out.emplace_back(preset.value, preset.label.value_or(std::string()));
+    return out;
+}
+
 } // namespace
 
 int main() {
@@ -186,6 +204,21 @@ int main() {
     const int m3DpiBefore = dpiOf(*m3);
     const unsigned int m3ThreshBefore = smartshiftThresholdOf(*m3);
 
+    // The MX Master ships three labeled presets; confirm they loaded with BOTH
+    // value and label (DPI-02 / DPI-03 pre-save baseline).
+    {
+        const auto loaded = presetsOf(*mx);
+        CHECK(loaded.size() == 3, "three DPI presets loaded");
+        if (loaded.size() == 3) {
+            CHECK(loaded[0] == std::make_pair(800, std::string("Low")),
+                  "preset[0] value+label loaded (800/Low)");
+            CHECK(loaded[1] == std::make_pair(1600, std::string("Medium")),
+                  "preset[1] value+label loaded (1600/Medium)");
+            CHECK(loaded[2] == std::make_pair(3200, std::string("High")),
+                  "preset[2] value+label loaded (3200/High)");
+        }
+    }
+
     // ---- 2. Mutate one DPI and one smartshift threshold in memory -----------
     const int newDpi = 2000;
     const unsigned int newThreshold = 77;
@@ -194,6 +227,18 @@ int main() {
                          .profiles.at("default");
         p.dpi = newDpi;
         p.smartshift->threshold = newThreshold;
+
+        // Mutate the preset list exactly like the GUI's .DPI.SetPresets payload
+        // would: relabel an existing preset AND append a new one (both a VALUE and
+        // a LABEL edit), proving both survive Save (DPI-02 / DPI-03).
+        auto& presets = p.dpi_presets.value();
+        auto it = presets.begin();
+        std::advance(it, 1);
+        it->label = "Office";          // relabel 1600 Medium -> Office
+        config::DpiPreset added;
+        added.value = 6400;
+        added.label = "Gaming";
+        presets.push_back(added);      // append a fourth preset
     }
 
     // ---- 3. Serialize via the EXACT save() write path -----------------------
@@ -228,6 +273,21 @@ int main() {
         // Button block survives.
         CHECK(mxAfter->buttons.has_value(), "MX Master button block survives");
         CHECK(mxAfter->buttons->count(0xc4) == 1, "MX Master cid 0xc4 survives");
+
+        // DPI-cycle presets round-trip: BOTH values AND labels survive Save, the
+        // relabel applied, and the appended preset persisted in order (DPI-02/03).
+        const auto presetsAfter = presetsOf(*mxAfter);
+        CHECK(presetsAfter.size() == 4, "preset count after mutate+save (3 -> 4)");
+        if (presetsAfter.size() == 4) {
+            CHECK(presetsAfter[0] == std::make_pair(800, std::string("Low")),
+                  "untouched preset value+label survives (800/Low)");
+            CHECK(presetsAfter[1] == std::make_pair(1600, std::string("Office")),
+                  "relabeled preset persists value+new label (1600/Office)");
+            CHECK(presetsAfter[2] == std::make_pair(3200, std::string("High")),
+                  "untouched preset value+label survives (3200/High)");
+            CHECK(presetsAfter[3] == std::make_pair(6400, std::string("Gaming")),
+                  "appended preset value+label persists (6400/Gaming)");
+        }
     }
 
     if (m3After) {

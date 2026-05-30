@@ -105,3 +105,25 @@ if(TARGET logiops-gui-lib AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/ButtonsModelTes
         add_test(NAME phase3_button_model COMMAND phase3_button_model_test)
     endif()
 endif()
+
+# ---------------------------------------------------------------------------
+# DpiCycle unit (GUI-side, QtTest) — Plan 03 (DPI-02 / DPI-03). Drives the
+# DeviceController DPI-cycle preset model via a RecordingController subclass that
+# overrides pushPresets() to capture the EXACT .DPI.SetPresets {values,labels}
+# payload (the device-scoped persistence path, option-a) with no live bus, and
+# asserts add/remove/relabel/setValue + [dpiMin,dpiMax] clamp (T-3-03-01). Gated
+# identically on the GUI lib existing.
+# ---------------------------------------------------------------------------
+if(TARGET logiops-gui-lib AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/DpiCycleTest.cpp)
+    find_package(Qt6 6.4 COMPONENTS Test QUIET)
+    if(Qt6_FOUND)
+        set(CMAKE_AUTOMOC ON)
+        add_executable(phase3_dpi_cycle_test DpiCycleTest.cpp)
+        target_link_libraries(phase3_dpi_cycle_test PRIVATE
+                logiops-gui-lib Qt6::Test)
+        set_target_properties(phase3_dpi_cycle_test PROPERTIES
+                CXX_STANDARD 20
+                CXX_STANDARD_REQUIRED ON)
+        add_test(NAME phase3_dpi_cycle COMMAND phase3_dpi_cycle_test)
+    endif()
+endif()

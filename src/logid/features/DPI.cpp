@@ -56,7 +56,8 @@ uint16_t getClosestDPI(const hidpp20::AdjustableDPI::SensorDPIList& dpi_list,
     }
 }
 
-DPI::DPI(Device* device) : DeviceFeature(device), _config(device->activeProfile().dpi) {
+DPI::DPI(Device* device) : DeviceFeature(device), _config(device->activeProfile().dpi),
+                           _presets(device->activeProfile().dpi_presets) {
     try {
         _adjustable_dpi = std::make_shared<hidpp20::AdjustableDPI>
                 (&device->hidpp20());
@@ -100,6 +101,7 @@ void DPI::listen() {
 void DPI::setProfile(config::Profile& profile) {
     std::unique_lock lock(_config_mutex);
     _config = profile.dpi;
+    _presets = profile.dpi_presets;
 }
 
 uint16_t DPI::getDPI(uint8_t sensor) {
@@ -134,7 +136,9 @@ DPI::IPC::IPC(DPI* parent) : ipcgull::interface(
                 {"GetSensors", {this, &IPC::getSensors, {"sensors"}}},
                 {"GetDPIs", {this, &IPC::getDPIs, {"sensor"}, {"dpis", "dpiStep", "range"}}},
                 {"GetDPI", {this, &IPC::getDPI, {"sensor"}, {"dpi"}}},
-                {"SetDPI", {this, &IPC::setDPI, {"dpi", "sensor"}}}
+                {"SetDPI", {this, &IPC::setDPI, {"dpi", "sensor"}}},
+                {"GetPresets", {this, &IPC::getPresets, {"values", "labels"}}},
+                {"SetPresets", {this, &IPC::setPresets, {"values", "labels"}}}
         }, {}, {}), _parent(*parent) {
 }
 
@@ -207,4 +211,39 @@ void DPI::IPC::setDPI(uint16_t dpi, uint8_t sensor) {
     }
 
     _parent.setDPI(dpi, sensor);
+}
+
+std::tuple<std::vector<uint32_t>, std::vector<std::string>>
+DPI::IPC::getPresets() const {
+    std::shared_lock lock(_parent._config_mutex);
+    std::vector<uint32_t> values;
+    std::vector<std::string> labels;
+    auto& presets = _parent._presets.get();
+    if (presets.has_value()) {
+        values.reserve(presets->size());
+        labels.reserve(presets->size());
+        for (const auto& p: presets.value()) {
+            values.push_back(static_cast<uint32_t>(p.value));
+            labels.push_back(p.label.value_or(std::string()));
+        }
+    }
+    return {std::move(values), std::move(labels)};
+}
+
+void DPI::IPC::setPresets(const std::vector<uint32_t>& values,
+                          const std::vector<std::string>& labels) {
+    std::unique_lock lock(_parent._config_mutex);
+    auto& target = _parent._presets.get();
+    std::list<config::DpiPreset> list;
+    for (std::size_t i = 0; i < values.size(); ++i) {
+        config::DpiPreset preset;
+        preset.value = static_cast<int>(values[i]);
+        if (i < labels.size() && !labels[i].empty())
+            preset.label = labels[i];
+        list.push_back(std::move(preset));
+    }
+    if (list.empty())
+        target.reset();
+    else
+        target = std::move(list);
 }
