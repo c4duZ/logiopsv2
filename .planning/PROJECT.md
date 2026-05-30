@@ -12,7 +12,9 @@ Bring the **full Options+ experience to Linux** — the rich configuration UX th
 
 ### Validated
 
-<!-- The logiops foundation this product builds on. Existing, working, relied upon. Confirmed via codebase map (.planning/codebase/). -->
+<!-- The logiops foundation this product builds on, plus capabilities delivered by completed phases. -->
+
+- ✓ Non-root D-Bus access path: system-bus policy relaxed to a `logiops` group (own=root), `save()` polkit-gated (`auth_admin_keep`, fail-safe deny), systemd hardening, HID report length-checks — Phase 1 (code complete & statically verified; 4 runtime items pending human validation in `01-HUMAN-UAT.md`)
 
 - ✓ HID++ 1.0/2.0 communication with Logitech devices over `hidraw` — existing (`src/logid/backend/`)
 - ✓ Device discovery + hotplug via udev, incl. Unifying receivers — existing (`src/logid/backend/raw/DeviceMonitor.cpp`, `hidpp10/ReceiverMonitor.cpp`)
@@ -94,4 +96,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-30 after initialization*
+*Last updated: 2026-05-30 after Phase 1 (Access Path & Daemon Hardening) — code complete, human validation pending*
