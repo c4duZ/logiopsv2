@@ -2,3 +2,6 @@
 *.swp
 *~
 /compile_commands.json
+
+# Local daemon config (not part of the repo)
+/logid.cfg
