@@ -34,7 +34,8 @@ ChangeHostAction::ChangeHostAction(
         : Action(device, interface_name, {
         {
                 {"GetHost", {this, &ChangeHostAction::getHost, {"host"}}},
-                {"SetHost", {this, &ChangeHostAction::setHost, {"host"}}}
+                {"SetHost", {this, &ChangeHostAction::setHost, {"host"}}},
+                {"GetHostCount", {this, &ChangeHostAction::getHostCount, {"count"}}}
         },
         {},
         {}
@@ -65,6 +66,12 @@ std::string ChangeHostAction::getHost() const {
     } else {
         return "";
     }
+}
+
+uint8_t ChangeHostAction::getHostCount() const {
+    if (!_change_host)
+        return 0;
+    return _change_host->getHostInfo().hostCount;
 }
 
 void ChangeHostAction::setHost(std::string host) {

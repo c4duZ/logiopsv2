@@ -83,3 +83,25 @@ if(TARGET logiops-gui-lib AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/DeviceControlle
         add_test(NAME phase3_device_controller COMMAND phase3_device_controller_test)
     endif()
 endif()
+
+# ---------------------------------------------------------------------------
+# ButtonsModel unit (GUI-side, QtTest) — Plan 02 (BTN-01..04 / HOST-01). Drives
+# the .Buttons enumerate + two-step setAction + binding readback via seedButtons()
+# and a recording subclass (no live bus), asserting role population, the
+# non-remappable gate (T-3-02-03), the setChangeHost std::stoi DoS guard
+# (T-3-02-02), and SetAction-before-param ordering (T-3-02-04). Gated identically
+# on the GUI lib existing.
+# ---------------------------------------------------------------------------
+if(TARGET logiops-gui-lib AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/ButtonsModelTest.cpp)
+    find_package(Qt6 6.4 COMPONENTS Test QUIET)
+    if(Qt6_FOUND)
+        set(CMAKE_AUTOMOC ON)
+        add_executable(phase3_button_model_test ButtonsModelTest.cpp)
+        target_link_libraries(phase3_button_model_test PRIVATE
+                logiops-gui-lib Qt6::Test)
+        set_target_properties(phase3_button_model_test PROPERTIES
+                CXX_STANDARD 20
+                CXX_STANDARD_REQUIRED ON)
+        add_test(NAME phase3_button_model COMMAND phase3_button_model_test)
+    endif()
+endif()

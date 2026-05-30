@@ -38,6 +38,12 @@ namespace logid::actions {
 
         void setHost(std::string host);
 
+        // Number of paired hosts reported by the device (HID++ 0x1814
+        // getHostInfo().hostCount). Exposed read-only over D-Bus so the GUI can
+        // render the correct number of Easy-Switch host slots (HOST-01) instead
+        // of guessing. Returns 0 when the ChangeHost feature is unsupported.
+        [[nodiscard]] uint8_t getHostCount() const;
+
         [[nodiscard]] uint8_t reprogFlags() const final;
 
     protected:
