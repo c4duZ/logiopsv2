@@ -93,6 +93,8 @@ std::string get_phys(int fd) {
                                 "RawDevice HIDIOCGRAWPHYS failed");
     }
 
+    if (len <= 0)
+        return {};                          // empty / no NUL to strip
     return {buf, static_cast<size_t>(len) - 1};
 }
 
@@ -105,6 +107,8 @@ std::string get_name(int fd) {
         throw std::system_error(err, std::system_category(),
                                 "RawDevice HIDIOCGRAWNAME failed");
     }
+    if (len <= 0)
+        return {};                          // empty / no NUL to strip
     return {name_buf, static_cast<size_t>(len) - 1};
 }
 
