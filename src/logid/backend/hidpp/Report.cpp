@@ -267,6 +267,8 @@ void Report::setParams(const std::vector<uint8_t>& _params) {
 }
 
 bool Report::isError10(Report::Hidpp10Error& error) const {
+    if (_data.size() <= Offset::Parameters + 1)   // need indices 3,4,5 => size() >= 6
+        return false;
     if (_data[Offset::Type] != Type::Short ||
         _data[Offset::SubID] != hidpp10::ErrorID)
         return false;
@@ -280,6 +282,8 @@ bool Report::isError10(Report::Hidpp10Error& error) const {
 }
 
 bool Report::isError20(Report::Hidpp20Error& error) const {
+    if (_data.size() <= Offset::Parameters + 1)   // need indices 3,4,5 => size() >= 6
+        return false;
     if (_data[Offset::Type] != Type::Long ||
         _data[Offset::Feature] != hidpp20::ErrorID)
         return false;
