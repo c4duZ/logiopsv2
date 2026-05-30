@@ -22,7 +22,7 @@ lands last, tested on clean VMs.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Access Path & Daemon Hardening** - Relax D-Bus policy to a group, polkit-gate writes, sandbox the daemon, length-check HID input so a non-root client can safely reach `pizza.pixl.LogiOps`
+- [x] **Phase 1: Access Path & Daemon Hardening** - Relax D-Bus policy to a group, polkit-gate writes, sandbox the daemon, length-check HID input so a non-root client can safely reach `pizza.pixl.LogiOps` (completed 2026-05-30)
 - [ ] **Phase 2: D-Bus Client & Device List** - Qt/QML app shell + typed D-Bus proxy showing a live, signal-driven device list with battery and connection status
 - [ ] **Phase 3: Core Config UI & Persistence** - Visual button remap, DPI, scroll/thumbwheel, manual profiles, and polkit-gated save — the Options+-style "configure without editing text" core
 - [ ] **Phase 4: Fine-Grained Gesture Control** - First daemon extension: a guided gesture builder with magnitude/repetition/granularity that fixes "volume +2" and "one desktop per gesture"
@@ -49,7 +49,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   - [x] 01-03-PLAN.md — systemd hardening of logid.service (ACCESS-03)
   - [x] 01-04-PLAN.md — HID length-checks + CONCERNS #1/#5/#8 fixes (ACCESS-04)
   - [x] 01-05-PLAN.md — ipcgull caller-threading: ipcgull::current_caller() (ACCESS-02 foundation)
-  - [ ] 01-06-PLAN.md — polkit-gate Configuration::save() + .policy + CMake link (ACCESS-02)
+  - [x] 01-06-PLAN.md — polkit-gate Configuration::save() + .policy + CMake link (ACCESS-02)
 **Research flag**: Re-verify exact D-Bus policy `group=` syntax and current polkit defaults (`auth_admin_keep`) against live `dbus-daemon`/`polkit` docs before hardening.
 
 ### Phase 2: D-Bus Client & Device List
@@ -156,7 +156,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Access Path & Daemon Hardening | 5/6 | In Progress|  |
+| 1. Access Path & Daemon Hardening | 6/6 | Complete   | 2026-05-30 |
 | 2. D-Bus Client & Device List | 0/TBD | Not started | - |
 | 3. Core Config UI & Persistence | 0/TBD | Not started | - |
 | 4. Fine-Grained Gesture Control | 0/TBD | Not started | - |
