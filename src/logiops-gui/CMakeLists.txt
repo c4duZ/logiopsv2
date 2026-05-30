@@ -41,6 +41,7 @@ add_library(logiops-gui-lib STATIC)
 target_sources(logiops-gui-lib PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/DeviceModel.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/DaemonConnection.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/KeyNameMapper.cpp
         ${GUI_DBUS_SRCS})
 # Qt6::Gui for QGuiApplication::clipboard() (the access-denied Copy CTA). The lib
 # stays free of Qt6::Quick/Qml so the model/connection unit test links lean.
