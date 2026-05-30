@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <!--
+    Trimmed introspection for the per device ThumbWheel interface
+    (features/ThumbWheel.cpp), hosted on the device node. GetConfig returns the
+    divert and invert flags. SetDivert/SetInvert write each. SetLeft/SetRight/
+    SetTap take an action type string and build the corresponding handler at the
+    thumb_wheel child nodes (left/right are gesture typed; see SCR 03 notes).
+    Type codes: b bool, s string. SCR 03.
+  -->
+  <interface name="pizza.pixl.LogiOps.ThumbWheel">
+    <method name="GetConfig">
+      <arg name="divert" type="b" direction="out"/>
+      <arg name="invert" type="b" direction="out"/>
+    </method>
+    <method name="SetDivert">
+      <arg name="divert" type="b" direction="in"/>
+    </method>
+    <method name="SetInvert">
+      <arg name="invert" type="b" direction="in"/>
+    </method>
+    <method name="SetLeft">
+      <arg name="type" type="s" direction="in"/>
+    </method>
+    <method name="SetRight">
+      <arg name="type" type="s" direction="in"/>
+    </method>
+    <method name="SetTap">
+      <arg name="type" type="s" direction="in"/>
+    </method>
+  </interface>
+</node>

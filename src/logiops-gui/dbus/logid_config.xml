@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <!--
+    Trimmed introspection for the daemon Config interface, hosted at the root
+    object path /pizza/pixl/logiops (Configuration.cpp). Save() persists the live
+    config tree to disk and is polkit gated (auth_admin_keep, fail safe deny);
+    no args, no return. The GUI calls it async (BusyIndicator) so a polkit prompt
+    never blocks the UI (pitfall 4). Hand authored from the VERIFIED Phase 3
+    interface table. CONF 01.
+  -->
+  <interface name="pizza.pixl.LogiOps.Config">
+    <method name="Save"/>
+  </interface>
+</node>

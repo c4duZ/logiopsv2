@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <!--
+    Trimmed introspection for the per device Buttons interface
+    (features/RemapButton.cpp), hosted on the device node. Enumerate returns the
+    object paths of the per button child nodes (.../devices/N/buttons/M, where M
+    is the enumeration index, NOT the control id). Each returned path hosts a
+    Button interface (logid_button.xml). Type code: ao array of object path.
+    BTN 01.
+  -->
+  <interface name="pizza.pixl.LogiOps.Buttons">
+    <method name="Enumerate">
+      <arg name="buttons" type="ao" direction="out"/>
+    </method>
+  </interface>
+</node>

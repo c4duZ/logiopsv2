@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <!--
+    Trimmed introspection for the per button Button interface
+    (features/RemapButton.cpp), hosted at .../devices/N/buttons/M. SetAction
+    takes an action type string (Keypress, ChangeDPI, CycleDPI, ChangeHost,
+    ChangeProfile, ToggleSmartShift, ToggleHiresScroll, None, Gesture); it drops
+    the old Action interface and creates the new one on this same node, then
+    reconfigures the hardware. The dynamically typed .Action.X interfaces are
+    driven via a generic QDBusInterface in Wave 2 (not typed proxies here).
+
+    Properties: ControlID and TaskID (uint16 identity), Remappable (gates the
+    hotspot; SetAction throws if false) and GestureSupport (gates the Gesture
+    action). Type codes: s string, q uint16, b bool. BTN 01, BTN 03, BTN 04.
+  -->
+  <interface name="pizza.pixl.LogiOps.Button">
+    <method name="SetAction">
+      <arg name="type" type="s" direction="in"/>
+    </method>
+    <property name="ControlID" type="q" access="read"/>
+    <property name="TaskID" type="q" access="read"/>
+    <property name="Remappable" type="b" access="read"/>
+    <property name="GestureSupport" type="b" access="read"/>
+  </interface>
+</node>

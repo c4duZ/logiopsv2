@@ -34,6 +34,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_devices.xml logid_devices_proxy)
 qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_device.xml  logid_device_proxy)
 
+# Phase 3 (Wave 0): the full per device config bus surface as typed proxies.
+# One trimmed introspection XML per stable interface; the dynamically typed
+# .Action.X interfaces are driven via generic QDBusInterface in Wave 2 (no proxy
+# here). Generated classes (CMAKE_CURRENT_BINARY_DIR): PizzaPixlLogiOpsConfig/
+# DPI/SmartShift/HiresScroll/ThumbWheel/Buttons/ButtonInterface.
+qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_config.xml      logid_config_proxy)
+qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_dpi.xml         logid_dpi_proxy)
+qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_smartshift.xml  logid_smartshift_proxy)
+qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_hiresscroll.xml logid_hiresscroll_proxy)
+qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_thumbwheel.xml  logid_thumbwheel_proxy)
+qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_buttons.xml     logid_buttons_proxy)
+qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_button.xml      logid_button_proxy)
+
 # Static library so test/DeviceModelTest can link the model without pulling in
 # main.cpp / QGuiApplication. Plan 03 adds DeviceModel.cpp (the model under test)
 # and the generated proxies; Plan 04 adds main.cpp + the QML module.

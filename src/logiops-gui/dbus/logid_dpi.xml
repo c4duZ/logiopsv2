@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <!--
+    Trimmed introspection for the per device DPI interface (features/DPI.cpp),
+    hosted on the device node /pizza/pixl/logiops/devices/N. GetDPIs returns the
+    list of valid DPIs plus a step and an isRange flag (bounds for the DPI 01
+    slider = min/max of dpis when isRange). GetDPI/SetDPI read/write a single per
+    sensor value (daemon snaps via getClosestDPI). GetSensors reports the sensor
+    count. Type codes: y byte, q uint16, ai array int32, b bool. DPI 01.
+  -->
+  <interface name="pizza.pixl.LogiOps.DPI">
+    <method name="GetDPIs">
+      <arg name="sensor" type="y" direction="in"/>
+      <arg name="dpis" type="ai" direction="out"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QList&lt;int&gt;"/>
+      <arg name="dpiStep" type="q" direction="out"/>
+      <arg name="isRange" type="b" direction="out"/>
+    </method>
+    <method name="GetDPI">
+      <arg name="sensor" type="y" direction="in"/>
+      <arg name="dpi" type="q" direction="out"/>
+    </method>
+    <method name="SetDPI">
+      <arg name="dpi" type="q" direction="in"/>
+      <arg name="sensor" type="y" direction="in"/>
+    </method>
+    <method name="GetSensors">
+      <arg name="sensors" type="y" direction="out"/>
+    </method>
+  </interface>
+</node>

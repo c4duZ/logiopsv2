@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <!--
+    Trimmed introspection for the per device SmartShift interface
+    (features/SmartShift.cpp), hosted on the device node. GetConfig returns the
+    active flag, threshold and torque. Each setter takes a value plus a clear
+    flag (clear resets to default). TorqueSupport (read only bool property) gates
+    the torque slider. Type codes: y byte, b bool. SCR 01.
+  -->
+  <interface name="pizza.pixl.LogiOps.SmartShift">
+    <method name="GetConfig">
+      <arg name="active" type="y" direction="out"/>
+      <arg name="threshold" type="y" direction="out"/>
+      <arg name="torque" type="y" direction="out"/>
+    </method>
+    <method name="SetActive">
+      <arg name="active" type="b" direction="in"/>
+      <arg name="clear" type="b" direction="in"/>
+    </method>
+    <method name="SetThreshold">
+      <arg name="threshold" type="y" direction="in"/>
+      <arg name="clear" type="b" direction="in"/>
+    </method>
+    <method name="SetTorque">
+      <arg name="torque" type="y" direction="in"/>
+      <arg name="clear" type="b" direction="in"/>
+    </method>
+    <property name="TorqueSupport" type="b" access="read"/>
+  </interface>
+</node>
