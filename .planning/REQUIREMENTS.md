@@ -10,7 +10,7 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 ### Access & Security
 
 - [x] **ACCESS-01**: A non-root user (in a `logiops` group) can connect to the `logid` D-Bus service and control devices
-- [ ] **ACCESS-02**: Privileged config persistence (writing `/etc/logid.cfg` via `Configuration::save()`) is gated behind a polkit authorization
+- [x] **ACCESS-02**: Privileged config persistence (writing `/etc/logid.cfg` via `Configuration::save()`) is gated behind a polkit authorization
 - [x] **ACCESS-03**: The daemon is sandboxed with systemd hardening (`NoNewPrivileges`, `ProtectSystem`, capability bounding) so widening D-Bus access does not widen the root attack surface
 - [x] **ACCESS-04**: Incoming HID report fields are length-checked before indexing, removing the unbounded-read surface on untrusted hardware input
 
@@ -115,7 +115,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | ACCESS-01 | Phase 1 | Complete |
-| ACCESS-02 | Phase 1 | Pending |
+| ACCESS-02 | Phase 1 | Complete |
 | ACCESS-03 | Phase 1 | Complete |
 | ACCESS-04 | Phase 1 | Complete |
 | DEV-01 | Phase 2 | Pending |
