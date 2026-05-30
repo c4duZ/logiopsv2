@@ -23,7 +23,7 @@ lands last, tested on clean VMs.
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Access Path & Daemon Hardening** - Relax D-Bus policy to a group, polkit-gate writes, sandbox the daemon, length-check HID input so a non-root client can safely reach `pizza.pixl.LogiOps` (completed 2026-05-30)
-- [ ] **Phase 2: D-Bus Client & Device List** - Qt/QML app shell + typed D-Bus proxy showing a live, signal-driven device list with battery and connection status
+- [x] **Phase 2: D-Bus Client & Device List** - Qt/QML app shell + typed D-Bus proxy showing a live, signal-driven device list with battery and connection status (completed 2026-05-30)
 - [ ] **Phase 3: Core Config UI & Persistence** - Visual button remap, DPI, scroll/thumbwheel, manual profiles, and polkit-gated save — the Options+-style "configure without editing text" core
 - [ ] **Phase 4: Fine-Grained Gesture Control** - First daemon extension: a guided gesture builder with magnitude/repetition/granularity that fixes "volume +2" and "one desktop per gesture"
 - [ ] **Phase 5: Per-Application Profiles & Profile Sharing** - User-session focus watcher (X11 + Wayland) auto-switching profiles by app, plus profile import/export
@@ -66,7 +66,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   - [x] 02-02-PLAN.md — Daemon battery feature: HID++ 0x1000 BatteryStatus wrapper + Battery/Charging D-Bus property + BatteryChanged signal (DEV-02)
   - [x] 02-03-PLAN.md — GUI typed D-Bus proxy + signal-driven DeviceModel (no cache, no-flicker) (DEV-01, DEV-03, DEV-04, CONF-03)
   - [x] 02-04-PLAN.md — GUI shell: main + DaemonConnection (reconnect) + QML sidebar/detail + 4 screen states + theme (DEV-01, DEV-03, DEV-04, CONF-03)
-  - [ ] 02-05-PLAN.md — GUI battery display wiring + live battery smoke (DEV-02)
+  - [x] 02-05-PLAN.md — GUI battery display wiring + live battery smoke (DEV-02)
 **UI hint**: yes
 
 ### Phase 3: Core Config UI & Persistence
@@ -162,7 +162,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Access Path & Daemon Hardening | 6/6 | Complete    | 2026-05-30 |
-| 2. D-Bus Client & Device List | 4/5 | In Progress|  |
+| 2. D-Bus Client & Device List | 5/5 | Complete   | 2026-05-30 |
 | 3. Core Config UI & Persistence | 0/TBD | Not started | - |
 | 4. Fine-Grained Gesture Control | 0/TBD | Not started | - |
 | 5. Per-Application Profiles & Profile Sharing | 0/TBD | Not started | - |
