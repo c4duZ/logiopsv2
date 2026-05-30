@@ -38,8 +38,14 @@ In scope: a new GUI CMake target, the generated/typed D-Bus proxy over `pizza.pi
 - Theme: follow the system light/dark theme via Qt, with an Options+-flavored own identity (custom-skinned, per research).
 - Distinguish daemon-not-running vs no-access vs no-devices with clear, separate messages.
 
+### Battery Feature (daemon C++ addition — added after research, 2026-05-30)
+- Research finding: the daemon has NO battery feature/property/signal today (only `BATTERY_STATUS=0x1000` enum constants). DEV-02 cannot be met by a pure D-Bus client.
+- DECISION (owner): build it in Phase 2. Add a minimal daemon-side HID++ 2.0 `BatteryStatus` (0x1000) feature wrapper following the existing feature pattern (AdjustableDPI/SmartShift/etc.), expose `Battery` (percentage) + `Charging`/level state as a D-Bus property on the device interface, and emit a battery-change signal so the GUI updates live without polling.
+- This means Phase 2 DOES touch the daemon C++ (a contained, standard feature — not greenfield like LED/RGB). The GUI consumes the new property/signal via the same proxy.
+- Scope guard: only the BatteryStatus read + D-Bus exposure + change signal. No charging-prediction, no other features.
+
 ### Claude's Discretion
-- Exact QML component breakdown, model role names, signal-wiring details, and the qdbusxml2cpp invocation specifics are at Claude's discretion, guided by the UI-SPEC (generated next) and Qt/QtDBus conventions.
+- Exact QML component breakdown, model role names, signal-wiring details, the qdbusxml2cpp invocation specifics, and the precise battery-feature class shape are at Claude's discretion, guided by the UI-SPEC and the existing logiops feature/ipcgull conventions.
 </decisions>
 
 <code_context>
