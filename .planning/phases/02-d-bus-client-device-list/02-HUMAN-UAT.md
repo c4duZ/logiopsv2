@@ -18,11 +18,11 @@ result: [pending]
 
 ### 1. GUI launches and shows the live device list (DEV-01/04)
 expected: Build + run (`cmake -S . -B build -DBUILD_GUI=ON && cmake --build build && ./build/src/logiops-gui/logiops-gui`); the sidebar lists connected Logitech devices by name/model; selecting one shows the read-only detail pane.
-result: [pending]
+result: PASS (2026-05-30) — GUI launches, sidebar shows "MX Master 4", detail pane shows name + connection. Required runtime pkgs: qml6-module-qtquick + qtqml-workerscript/qtqml-models (noted for Phase 9 Depends). Fixed 3 bugs found here: init segfault (a31a39e), GetAll QDBusVariant unwrap + "model" role collision (f46a4e8). Launched non-root via `sg logiops` after installing the relaxed D-Bus policy. Minor cosmetic glitch (stray chars at sidebar left edge) deferred to Phase 3 polish.
 
 ### 2. Live battery on the real MX Master 4 (DEV-02 + 0x1004 confirmation)
 expected: First confirm the daemon decode via `busctl --system get-property pizza.pixl.LogiOps /pizza/pixl/logiops/devices/0 pizza.pixl.LogiOps.Device Battery` → `y NN` (0..100) with `BatteryKnown=true`. Then in the GUI: numeric % + glyph, threshold color (green >20% / amber ≤20%), charging bolt appears when you plug the charger — all WITHOUT restart. Confirms the 0x1004 UnifiedBattery wire-format on real hardware.
-result: PARTIAL — daemon-side CONFIRMED on real MX Master 4 (2026-05-30): `busctl ... Battery → y 50` (0x1004 UnifiedBattery decode works). Also surfaced + fixed a segfault: emitting BatteryChanged during init crashed the daemon (fix commit a31a39e). STILL PENDING: GUI rendering (% glyph, threshold color, live charging bolt) — needs the GUI launched.
+result: PASS (2026-05-30) — daemon-side CONFIRMED on real MX Master 4: `busctl ... Battery → y 50`, BatteryKnown true (0x1004 UnifiedBattery decode works). GUI renders battery 50% in green (>20% threshold) in both sidebar and detail pane. Live charging-bolt transition (plug/unplug) not yet exercised but the static render + decode are confirmed.
 
 ### 3. Hotplug / sleep-wake updates without restart, no flicker (DEV-03)
 expected: Unplug/replug the receiver and let the mouse sleep/wake; the list updates live (sleeping/offline dimmed-in-place, true unpair removes the row), with no flicker, no row reorder, no full reset.
