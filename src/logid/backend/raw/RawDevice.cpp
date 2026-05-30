@@ -234,7 +234,11 @@ void RawDevice::_readReports() {
     ssize_t len;
 
     while (-1 != (len = ::read(_fd, buf, max_data_length))) {
-        if (len < 0 || len > max_data_length) {
+        // read() into a max_data_length buffer can only return 0..max_data_length,
+        // but guard explicitly so the invariant survives future buffer/count changes.
+        // <= 0 also skips zero-length reads (which would build an empty vector and
+        // be indexed past downstream). Compare against the actual destination buffer.
+        if (len <= 0 || static_cast<size_t>(len) > sizeof(buf)) {
             logPrintf(WARN, "Ignoring HID read of unexpected length %zd on %s",
                       (ssize_t)len, _path.c_str());
             continue;   // do not construct a report from a bogus length
