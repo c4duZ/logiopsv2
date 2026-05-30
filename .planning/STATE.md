@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-05-30T20:00:35.483Z"
+stopped_at: Completed 02-04-PLAN.md (human-verify deferred)
+last_updated: "2026-05-30T20:30:18.349Z"
 last_activity: 2026-05-30
 progress:
   total_phases: 9
   completed_phases: 1
   total_plans: 11
-  completed_plans: 9
-  percent: 82
+  completed_plans: 10
+  percent: 91
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 ## Current Position
 
 Phase: 2 (D-Bus Client & Device List) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-05-30
 
@@ -60,6 +60,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase 01-access-path-daemon-hardening P06 | 3 | 3 tasks | 4 files |
 | Phase 02-d-bus-client-device-list P02 | 25 | 2 tasks | 8 files |
 | Phase 02 P03 | 18 | 2 tasks | 5 files |
+| Phase 02-d-bus-client-device-list P04 | 40 | 2 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,7 @@ Recent decisions affecting current work:
 - [Phase 01-access-path-daemon-hardening]: [Phase 1]: Configuration::save() polkit-gated (action pizza.pixl.logiops.save-config, auth_admin_keep) via ipcgull::current_caller()+polkit_system_bus_name subject; fail-safe-DENY on null authority/subject/result/error/empty caller, throw before writeFile so /etc/logid.cfg stays byte-unchanged on denial; polkit-gobject-1 v124 linked, -Werror clean. Task 3 interactive verify (deny-unchanged + authorized-write-under-hardened-unit + ReadWritePaths file-vs-/etc) deferred to operator (ACCESS-02).
 - [Phase 02-d-bus-client-device-list]: [Phase 2]: Daemon battery added (HID++ 0x1000 wrapper + DeviceBattery feature + Battery/Charging/BatteryKnown property and BatteryChanged signal on .Device) — DEV-02 is now real signal-driven data, no polling (CONF-03). Scope held to 0x1000; 0x1004 UnifiedBattery deferred (newer mice may need it). Contradicts the earlier 'Phases 2-3 = zero daemon C++ changes' roadmap assumption.
 - [Phase 02-d-bus-client-device-list]: [Phase 2]: Typed qdbusxml2cpp proxies (PizzaPixlLogiOps{Devices,Device}Interface) + signal-driven DeviceModel (QAbstractListModel) landed; rows come ONLY from Enumerate+DeviceAdded/Removed/StatusChanged (CONF-03, no cache), StatusChanged emits per-role dataChanged for ConnectionStateRole only (no-flicker, stable nickname sort), beginResetModel reserved for clear()/reconnect. device_model+device_model_noflicker GREEN, -Werror clean. Battery slot/roles present-but-unwired (Plan 05). Caught: '--' and '<' in XML comments silently broke qdbusxml2cpp into empty proxies.
+- [Phase 02-d-bus-client-device-list]: [Phase 2]: logiops-gui running app landed — DaemonConnection (system-bus connect + QDBusServiceWatcher NameOwnerChanged reconnect + async Enumerate/per-device Properties.GetAll, no UI block) drives DeviceModel; ScreenState enum maps AccessDenied (group policy) vs DaemonDown (no owner) vs Empty vs Populated; QML StackLayout indexed by screenState gives 4 distinct full-window states; SystemPalette-luminance dark theme (Qt 6.4.2, no colorScheme). -Werror clean, 5/5 unit tests green. Battery is a '—' stub (Plan 05). Caught: loadFromModule is 6.5+ (load via qrc prefer-prefix); runtime needs base qml6-module-qtquick installed.
 
 ### Pending Todos
 
@@ -94,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-30T20:00:27.168Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-05-30T20:30:07.725Z
+Stopped at: Completed 02-04-PLAN.md (human-verify deferred)
 Resume file: None
