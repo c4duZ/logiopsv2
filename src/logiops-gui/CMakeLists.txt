@@ -53,6 +53,14 @@ target_include_directories(logiops-gui-lib PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_SOURCE_DIR}/src/logid)
+# Mirror the daemon's bus selection (WR-01): when built with -DUSE_USER_BUS=ON
+# the GUI must talk to the SESSION bus, exactly like the daemon (logid.cpp ~154),
+# otherwise a user-bus dev daemon surfaces as DaemonDown. The root CMakeLists
+# already adds -DUSE_USER_BUS globally; restate it as a target define so the
+# contract is explicit and order-independent.
+if(USE_USER_BUS)
+    target_compile_definitions(logiops-gui-lib PUBLIC USE_USER_BUS)
+endif()
 
 # The running app: QGuiApplication + QQmlApplicationEngine, the QML module
 # (Main shell + four state screens + Theme singleton), and the mouse/keyboard

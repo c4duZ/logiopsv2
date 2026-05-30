@@ -43,8 +43,23 @@ const QString kService = QStringLiteral(SERVICE_ROOT_NAME);
 const QString kRootPath = QStringLiteral("/pizza/pixl/logiops");
 } // namespace
 
+namespace {
+// Mirror the daemon's bus selection (src/logid/logid.cpp ~line 154): the
+// -DUSE_USER_BUS=ON dev build moves the entire IPC surface to the session bus
+// for non-root development. Hardcoding systemBus() here would make a user-bus
+// daemon look DaemonDown (no owner on the system bus) — a confusing dev-time
+// false negative. System bus stays the production default (WR-01).
+QDBusConnection daemonBus() {
+#ifdef USE_USER_BUS
+    return QDBusConnection::sessionBus();
+#else
+    return QDBusConnection::systemBus();
+#endif
+}
+} // namespace
+
 DaemonConnection::DaemonConnection(DeviceModel* model, QObject* parent)
-    : QObject(parent), _model(model), _bus(QDBusConnection::systemBus()) {
+    : QObject(parent), _model(model), _bus(daemonBus()) {
     // VERIFIED A2: QDBusServiceWatcher + WatchForOwnerChange is the canonical,
     // race-free reconnect mechanism. Watch only the daemon's well-known name.
     _watcher = new QDBusServiceWatcher(kService, _bus,
