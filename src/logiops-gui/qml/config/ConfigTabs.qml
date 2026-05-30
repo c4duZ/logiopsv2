@@ -55,6 +55,7 @@ Item {
                 // Real content for implemented tabs; placeholder label otherwise.
                 readonly property bool implemented:
                     modelData === "buttons" || modelData === "pointer"
+                    || modelData === "scroll"
                 Loader {
                     anchors.fill: parent
                     active: tabBody.implemented
@@ -62,6 +63,7 @@ Item {
                         switch (tabBody.modelData) {
                         case "buttons": return buttonsTabComponent;
                         case "pointer": return pointerTabComponent;
+                        case "scroll":  return scrollTabComponent;
                         default:        return null;
                         }
                     }
@@ -72,7 +74,6 @@ Item {
                     visible: !tabBody.implemented
                     text: {
                         switch (tabBody.modelData) {
-                        case "scroll":   return qsTr("Scroll");
                         case "profiles": return qsTr("Profiles");
                         default:         return tabBody.modelData;
                         }
@@ -99,6 +100,15 @@ Item {
     Component {
         id: pointerTabComponent
         PointerTab {
+            controller: root.controller
+        }
+    }
+
+    // The Scroll tab content (SCR-01..03): capability-gated SmartShift / hi-res /
+    // thumbwheel sections, bound to the per-device controller.
+    Component {
+        id: scrollTabComponent
+        ScrollTab {
             controller: root.controller
         }
     }

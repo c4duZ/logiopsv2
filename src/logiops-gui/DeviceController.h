@@ -154,6 +154,12 @@ public:
     Q_INVOKABLE void setHiresInvert(bool invert);
     Q_INVOKABLE void setThumbDivert(bool divert);
     Q_INVOKABLE void setThumbInvert(bool invert);
+    // Assign a SIMPLE action to the thumbwheel TAP (SCR-03). VERIFIED the daemon's
+    // ThumbWheel.SetTap builds a simple action via makeAction at .../thumb_wheel/tap
+    // (no daemon change needed). `type` is a simple action type string, e.g.
+    // "ToggleSmartShift" / "ToggleHiresScroll" / "None". left/right are gesture-
+    // typed and deferred to Phase 4 (CONTEXT).
+    Q_INVOKABLE void setThumbTap(const QString& type);
 
     // --- Test / construction seams (also reused by the live path). ---
     // Apply a present-interface set (the parsed Introspect result, or an injected

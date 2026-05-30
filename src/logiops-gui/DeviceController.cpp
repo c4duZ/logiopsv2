@@ -410,4 +410,11 @@ void DeviceController::setThumbInvert(bool invert) {
         _thumbProxy->SetInvert(invert);
 }
 
+void DeviceController::setThumbTap(const QString& type) {
+    // Simple-action assignment to the thumbwheel tap (SCR-03). The daemon's
+    // SetTap builds the handler via makeAction at .../thumb_wheel/tap.
+    if (_thumbProxy != nullptr)
+        _thumbProxy->SetTap(type);
+}
+
 } // namespace logiops_gui
