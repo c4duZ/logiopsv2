@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-05-30T17:55:15.886Z"
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-05-30T17:58:20.780Z"
 last_activity: 2026-05-30
 progress:
   total_phases: 9
   completed_phases: 0
   total_plans: 6
-  completed_plans: 2
-  percent: 33
+  completed_plans: 3
+  percent: 50
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 ## Current Position
 
 Phase: 1 (Access Path & Daemon Hardening) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-05-30
 
@@ -54,6 +54,7 @@ Progress: [██░░░░░░░░] 17%
 *Updated after each plan completion*
 | Phase 1 P01 | 3 | 3 tasks | 7 files |
 | Phase 01 P02 | 1 | 1 tasks | 1 files |
+| Phase 01 P03 | 4 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,7 @@ Recent decisions affecting current work:
 - [Roadmap]: Macros (Phase 7) and backlight (Phase 8) isolated as later, higher-uncertainty phases; backlight is greenfield (no LED HID++ feature exists).
 - [Phase 1]: Wave 0 harness: header-only RED CTest unit (RED until Plan 04 adds hasHidppHeader) + graceful-skip ACCESS-01/02/03 smoke scripts
 - [Phase 01]: [Phase 1]: D-Bus policy relaxed to group=logiops for send/receive on pizza.pixl.LogiOps; own= kept root-only (least-privilege, ACCESS-01)
+- [Phase 01]: [Phase 1]: logid.service hardened (NoNewPrivileges, ProtectSystem=strict, empty CapabilityBoundingSet, AF_UNIX+AF_NETLINK only); User=root kept and PrivateDevices omitted to preserve hidraw/uinput; ReadWritePaths=/etc/logid.cfg file-scoped pending Plan 06 EROFS check (ACCESS-03)
 
 ### Pending Todos
 
@@ -82,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-30T17:55:06.638Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-05-30T17:58:15.230Z
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None

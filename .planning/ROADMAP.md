@@ -46,7 +46,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 6 plans
   - [x] 01-01-PLAN.md — Wave 0 test harness: CTest hidpp-bounds unit + ACCESS-01/02/03 smoke scripts
   - [x] 01-02-PLAN.md — D-Bus policy relaxation to group=logiops (ACCESS-01)
-  - [ ] 01-03-PLAN.md — systemd hardening of logid.service (ACCESS-03)
+  - [x] 01-03-PLAN.md — systemd hardening of logid.service (ACCESS-03)
   - [ ] 01-04-PLAN.md — HID length-checks + CONCERNS #1/#5/#8 fixes (ACCESS-04)
   - [ ] 01-05-PLAN.md — ipcgull caller-threading: ipcgull::current_caller() (ACCESS-02 foundation)
   - [ ] 01-06-PLAN.md — polkit-gate Configuration::save() + .policy + CMake link (ACCESS-02)
