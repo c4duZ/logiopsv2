@@ -22,7 +22,7 @@ result: [pending]
 
 ### 2. Live battery on the real MX Master 4 (DEV-02 + 0x1004 confirmation)
 expected: First confirm the daemon decode via `busctl --system get-property pizza.pixl.LogiOps /pizza/pixl/logiops/devices/0 pizza.pixl.LogiOps.Device Battery` → `y NN` (0..100) with `BatteryKnown=true`. Then in the GUI: numeric % + glyph, threshold color (green >20% / amber ≤20%), charging bolt appears when you plug the charger — all WITHOUT restart. Confirms the 0x1004 UnifiedBattery wire-format on real hardware.
-result: [pending]
+result: PARTIAL — daemon-side CONFIRMED on real MX Master 4 (2026-05-30): `busctl ... Battery → y 50` (0x1004 UnifiedBattery decode works). Also surfaced + fixed a segfault: emitting BatteryChanged during init crashed the daemon (fix commit a31a39e). STILL PENDING: GUI rendering (% glyph, threshold color, live charging bolt) — needs the GUI launched.
 
 ### 3. Hotplug / sleep-wake updates without restart, no flicker (DEV-03)
 expected: Unplug/replug the receiver and let the mouse sleep/wake; the list updates live (sleeping/offline dimmed-in-place, true unpair removes the row), with no flicker, no row reorder, no full reset.
