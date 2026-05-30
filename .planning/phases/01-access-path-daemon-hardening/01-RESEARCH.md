@@ -692,25 +692,29 @@ static void gdbus_method_call(
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **libconfig write strategy (in-place vs temp+rename).**
    - Known: `_config.writeFile(path)` (Configuration.cpp:61) writes `/etc/logid.cfg`.
    - Unclear: whether libconfig writes in place (then `ReadWritePaths=/etc/logid.cfg` suffices) or writes a temp file in `/etc` and renames (then needs `ReadWritePaths=/etc`).
    - Recommendation: test `save()` under the hardened unit early; widen `ReadWritePaths` to `/etc` only if the file-scoped path fails.
+   - **Resolution (verify-at-runtime, Plan 03/06):** Start file-scoped `ReadWritePaths=/etc/logid.cfg`; Plan 06 Task 3 performs an authorized save under the hardened unit and widens to `ReadWritePaths=/etc` only if EROFS is observed (temp+rename case).
 
 2. **ipcgull threading model.**
    - Known: dispatch holds `server_lock` (recursive_mutex).
    - Unclear: whether GDBus can invoke `gdbus_method_call` concurrently from multiple threads.
    - Recommendation: assume single main-loop thread (A8); if uncertain, use a thread-local for the "current caller" slot to be safe under either model.
+   - **Resolution (slot design, Plan 05):** Resolved by using a `thread_local` current-caller slot set under `server_lock` and cleared via RAII — correct under either single- or multi-threaded GMainContext dispatch (A8), so the threading question no longer blocks.
 
 3. **Async vs sync polkit.**
    - Known: `_sync` blocks the calling thread.
    - Unclear: acceptable for the (rare) save on the main loop?
    - Recommendation: start with `_sync`; if the bus stalls during the prompt, migrate `Save` to ipcgull's async/deferred-reply path (larger change — flag for a follow-up if needed).
+   - **Resolution (accepted sync):** Accepted the blocking `_sync` polkit call for the rare save (T-01-06-04 = accept); an async/deferred-reply migration is flagged as a follow-up only if a real bus stall is observed.
 
 4. **CI smoke feasibility.**
    - Full D-Bus+polkit+hardware smoke is hard in CI containers. Recommendation: CI covers compile (+`-Werror`, +polkit dep) and `systemd-analyze` static checks; runtime/hardware checks stay manual (`TESTED.md`).
+   - **Resolution (deferred to Phase 9):** CI covers compile (+polkit dep, `systemd-analyze` static checks); full D-Bus+polkit+hardware smoke is deferred to Phase 9 packaging/CI and stays manual (TESTED.md) until then.
 
 ---
 
