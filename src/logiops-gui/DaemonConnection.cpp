@@ -200,11 +200,15 @@ void DaemonConnection::addDevice(const QDBusObjectPath& path) {
                 propsIface->deleteLater();
 
                 if (reply.isError()) {
-                    // A property read failed (device vanished mid-enumerate, or
-                    // policy edge): still register the row with best-effort empty
-                    // values so it is not silently dropped — the model owns truth.
+                    // A property read failed (device present on the bus but
+                    // unreachable — vanished mid-enumerate, receiver lost, or a
+                    // policy edge): register the row dimmed as Offline rather than
+                    // dropping it or faking Online (WR-03 / UI-SPEC: connection
+                    // loss = dim-in-place Offline, only a genuine DeviceRemoved
+                    // unpair drops the row). The model owns truth.
                     if (_model && _deviceProxies.contains(key)) {
-                        _model->onDeviceAdded(key, QString(), 0, true);
+                        _model->onDeviceAdded(key, QString(), 0, /*active=*/false);
+                        _model->onConnectionStateChanged(key, DeviceModel::Offline);
                         // No battery info available -> "—" (known=false).
                         _model->onBatteryChanged(key, 0, false, false);
                     }

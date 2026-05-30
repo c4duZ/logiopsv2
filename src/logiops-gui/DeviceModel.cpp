@@ -151,11 +151,21 @@ void DeviceModel::onDeviceRemoved(const QString& path) {
 }
 
 void DeviceModel::onStatusChanged(const QString& path, bool active) {
+    // StatusChanged carries the daemon's wake/sleep bool (Active): awake -> Online,
+    // asleep -> Sleeping (dimmed, stays in list). True disconnect/receiver-lost is
+    // a separate Offline state driven via onConnectionStateChanged (UI-SPEC).
+    onConnectionStateChanged(path, active ? Online : Sleeping);
+}
+
+void DeviceModel::onConnectionStateChanged(const QString& path, int state) {
     const int row = rowForPath(path);
     if (row < 0)
         return;
 
-    _rows[row].connectionState = active ? Online : Sleeping;
+    if (_rows[row].connectionState == state)
+        return; // no change -> no spurious repaint.
+
+    _rows[row].connectionState = state;
     const QModelIndex idx = index(row);
     // No-flicker: ONLY ConnectionStateRole, on the one row. Never reset/resort.
     emit dataChanged(idx, idx, {ConnectionStateRole});

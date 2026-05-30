@@ -88,6 +88,11 @@ public slots:
     // Sleep/wake (StatusChanged). Targeted dataChanged for ConnectionStateRole
     // only — no reset, no reorder.
     void onStatusChanged(const QString& path, bool active);
+    // Connection-loss / dim-in-place (UI-SPEC: connection loss = Offline, NOT
+    // removal; only a genuine unpair/unplug drops the row via onDeviceRemoved).
+    // Sets an explicit ConnectionState and emits the same targeted, no-flicker
+    // dataChanged({ConnectionStateRole}) on the one row. No-op if absent.
+    void onConnectionStateChanged(const QString& path, int state);
     // Battery update (BatteryChanged — wired to the daemon signal in Plan 05).
     // Targeted dataChanged for the battery roles only.
     void onBatteryChanged(const QString& path, int percent, bool charging, bool known);
