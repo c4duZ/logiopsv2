@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 03-00-PLAN.md (Wave-0 gate: CONF-01 round-trip GREEN)"
-last_updated: "2026-05-30T23:03:39.220Z"
+stopped_at: Completed 03-01-PLAN.md (DeviceController + tabbed shell, UI-01 spine)
+last_updated: "2026-05-30T23:14:52.491Z"
 last_activity: 2026-05-30
 progress:
   total_phases: 9
   completed_phases: 2
   total_plans: 16
-  completed_plans: 12
-  percent: 75
+  completed_plans: 13
+  percent: 81
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 ## Current Position
 
 Phase: 03 (Core Config UI & Persistence) — EXECUTING
-Plan: 2 of 5
-Status: Executing Phase 03 (Wave 0 gate complete)
-Last activity: 2026-05-30 -- Completed 03-00 (CONF-01 round-trip GREEN)
+Plan: 3 of 5
+Status: Ready to execute
+Last activity: 2026-05-30
 
 Progress: [███████▌░░] 75%
 
@@ -64,6 +64,7 @@ Progress: [███████▌░░] 75%
 | Phase 02-d-bus-client-device-list P04 | 40 | 2 tasks | 15 files |
 | Phase 02-d-bus-client-device-list P05 | 18 | 2 tasks | 9 files |
 | Phase 03-core-config-ui-persistence P00 | 66 | 3 tasks | 16 files |
+| Phase 03-core-config-ui-persistence P01 | 8 | 3 tasks | 27 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,7 @@ Recent decisions affecting current work:
 - [Phase 02-d-bus-client-device-list]: [Phase 2]: Live battery wired end-to-end (DEV-02) — .Device proxy XML gains Battery/Charging/BatteryKnown+BatteryChanged; DaemonConnection subscribes BatteryChanged -> DeviceModel.onBatteryChanged (no polling, CONF-03) + seeds initial from the GetAll snapshot; DeviceDelegate draws glyph+fill+% with >20% green/<=20% amber thresholds, always-green charging bolt, '—' when BatteryKnown=false, per-role bindings (test_battery_noflicker green). Caught: font.features is Qt 6.7+ (target 6.4.2) -> stable % width via TextMetrics instead; battery glyph drawn in QML primitives to tint without Qt5Compat.GraphicalEffects.
 - [Phase 03-core-config-ui-persistence]: [Phase 3]: CONF-01 BLOCKING gate satisfied — phase3_save_roundtrip proves Configuration::save() serialization (config::set+writeFile) round-trips device-block count + values with no loss; comment/formatting loss accepted. phase3_save_unknownkey proves schema-unknown keys drop without crash (T-3-00-02). Tests link ipcgull_static+config++, compile config.cpp directly on a temp cfg (no bus/polkit, never /etc).
 - [Phase 03-core-config-ui-persistence]: [Phase 3]: KeyNameMapper (BTN-02) maps Qt key/modifier->libevdev KEY_* (modifiers->LEFT*, letters/digits/F-keys algorithmic, table for rest); Escape+unknown->empty (T-3-00-03 no guessed token). Seven typed D-Bus proxies generated (qt_add 2->9) covering full Phase 3 config surface; ai out-arg needs QtTypeName.Out0=QList<int> annotation. Wave 1/2 are pure assembly.
+- [Phase 03-core-config-ui-persistence]: DeviceController per-device QObject discovers capabilities via D-Bus Introspect (present-interface set -> lazy typed proxies, mirroring daemon _addFeature), exposes capability flags + live-value Q_PROPERTYs with optimistic async setters; DeviceControllerFactory owns/swaps it on selection (single context property). Tabbed DetailPane: header + sliding accent TabBar + cross-fading ConfigTabs StackLayout with whole-tab capability omission (UI-01). Phase 3 Theme tokens + 12 glyphs landed. phase3_device_controller + full suite 9/9 GREEN.
 
 ### Pending Todos
 
@@ -102,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-30T23:03:29.360Z
-Stopped at: Completed 03-00-PLAN.md (Wave-0 gate: CONF-01 round-trip GREEN)
+Last session: 2026-05-30T23:14:46.768Z
+Stopped at: Completed 03-01-PLAN.md (DeviceController + tabbed shell, UI-01 spine)
 Resume file: None

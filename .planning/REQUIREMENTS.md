@@ -30,15 +30,15 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 
 ### Pointer / DPI
 
-- [ ] **DPI-01**: User can adjust DPI/sensitivity with a slider bounded by the device's reported min/max
+- [x] **DPI-01**: User can adjust DPI/sensitivity with a slider bounded by the device's reported min/max
 - [ ] **DPI-02**: User can define a set of DPI levels to cycle through
 - [ ] **DPI-03**: User can label DPI presets with names
 
 ### Scroll
 
-- [ ] **SCR-01**: User can toggle and tune SmartShift (on/off, threshold, torque)
-- [ ] **SCR-02**: User can toggle hi-res scrolling and invert scroll direction
-- [ ] **SCR-03**: User can configure thumbwheel behavior (divert/invert, left/right/tap actions) on supported devices
+- [x] **SCR-01**: User can toggle and tune SmartShift (on/off, threshold, torque)
+- [x] **SCR-02**: User can toggle hi-res scrolling and invert scroll direction
+- [x] **SCR-03**: User can configure thumbwheel behavior (divert/invert, left/right/tap actions) on supported devices
 
 ### Multi-Host
 
@@ -82,7 +82,7 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 
 ### Visual / UX
 
-- [ ] **UI-01**: The app presents a faithful Options+-style interface (per-model device renders, tabbed layout, polished and animated)
+- [x] **UI-01**: The app presents a faithful Options+-style interface (per-model device renders, tabbed layout, polished and animated)
 
 ### Packaging
 
@@ -127,17 +127,17 @@ Which phases cover which requirements. Populated during roadmap creation.
 | BTN-02 | Phase 3 | Complete |
 | BTN-03 | Phase 3 | Pending |
 | BTN-04 | Phase 3 | Pending |
-| DPI-01 | Phase 3 | Pending |
+| DPI-01 | Phase 3 | Complete |
 | DPI-02 | Phase 3 | Pending |
 | DPI-03 | Phase 3 | Pending |
-| SCR-01 | Phase 3 | Pending |
-| SCR-02 | Phase 3 | Pending |
-| SCR-03 | Phase 3 | Pending |
+| SCR-01 | Phase 3 | Complete |
+| SCR-02 | Phase 3 | Complete |
+| SCR-03 | Phase 3 | Complete |
 | HOST-01 | Phase 3 | Pending |
 | PROF-01 | Phase 3 | Pending |
 | CONF-01 | Phase 3 | Complete |
 | CONF-02 | Phase 3 | Pending |
-| UI-01 | Phase 3 | Pending |
+| UI-01 | Phase 3 | Complete |
 | GEST-01 | Phase 4 | Pending |
 | GEST-02 | Phase 4 | Pending |
 | GEST-03 | Phase 4 | Pending |
