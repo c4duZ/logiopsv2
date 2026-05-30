@@ -53,18 +53,25 @@ Item {
                 }
 
                 // Real content for implemented tabs; placeholder label otherwise.
+                readonly property bool implemented:
+                    modelData === "buttons" || modelData === "pointer"
                 Loader {
                     anchors.fill: parent
-                    active: tabBody.modelData === "buttons"
-                    sourceComponent: tabBody.modelData === "buttons" ? buttonsTabComponent : null
+                    active: tabBody.implemented
+                    sourceComponent: {
+                        switch (tabBody.modelData) {
+                        case "buttons": return buttonsTabComponent;
+                        case "pointer": return pointerTabComponent;
+                        default:        return null;
+                        }
+                    }
                 }
 
                 Text {
                     anchors.centerIn: parent
-                    visible: tabBody.modelData !== "buttons"
+                    visible: !tabBody.implemented
                     text: {
                         switch (tabBody.modelData) {
-                        case "pointer":  return qsTr("Pointer");
                         case "scroll":   return qsTr("Scroll");
                         case "profiles": return qsTr("Profiles");
                         default:         return tabBody.modelData;
@@ -84,6 +91,15 @@ Item {
         ButtonsTab {
             controller: root.controller
             buttonsModel: deviceControllerFactory.buttonsModel
+        }
+    }
+
+    // The Pointer tab content (DPI-01..03): device-bounded DPI slider + labeled
+    // cycle editor, bound to the per-device controller.
+    Component {
+        id: pointerTabComponent
+        PointerTab {
+            controller: root.controller
         }
     }
 }

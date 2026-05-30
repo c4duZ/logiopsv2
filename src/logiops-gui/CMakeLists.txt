@@ -102,6 +102,7 @@ qt_add_qml_module(logiops-gui
             qml/config/ReassignPanel.qml
             qml/config/KeyCaptureField.qml
             qml/config/PointerTab.qml
+            qml/config/DpiCycleEditor.qml
             qml/config/ScrollTab.qml
             qml/config/ProfilesTab.qml
             qml/states/EmptyState.qml
