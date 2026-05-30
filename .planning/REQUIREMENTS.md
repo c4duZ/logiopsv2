@@ -114,13 +114,54 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (to be filled by roadmap) | — | Pending |
+| ACCESS-01 | Phase 1 | Pending |
+| ACCESS-02 | Phase 1 | Pending |
+| ACCESS-03 | Phase 1 | Pending |
+| ACCESS-04 | Phase 1 | Pending |
+| DEV-01 | Phase 2 | Pending |
+| DEV-02 | Phase 2 | Pending |
+| DEV-03 | Phase 2 | Pending |
+| DEV-04 | Phase 2 | Pending |
+| CONF-03 | Phase 2 | Pending |
+| BTN-01 | Phase 3 | Pending |
+| BTN-02 | Phase 3 | Pending |
+| BTN-03 | Phase 3 | Pending |
+| BTN-04 | Phase 3 | Pending |
+| DPI-01 | Phase 3 | Pending |
+| DPI-02 | Phase 3 | Pending |
+| DPI-03 | Phase 3 | Pending |
+| SCR-01 | Phase 3 | Pending |
+| SCR-02 | Phase 3 | Pending |
+| SCR-03 | Phase 3 | Pending |
+| HOST-01 | Phase 3 | Pending |
+| PROF-01 | Phase 3 | Pending |
+| CONF-01 | Phase 3 | Pending |
+| CONF-02 | Phase 3 | Pending |
+| UI-01 | Phase 3 | Pending |
+| GEST-01 | Phase 4 | Pending |
+| GEST-02 | Phase 4 | Pending |
+| GEST-03 | Phase 4 | Pending |
+| GEST-04 | Phase 4 | Pending |
+| PROF-02 | Phase 5 | Pending |
+| PROF-03 | Phase 5 | Pending |
+| PROF-04 | Phase 5 | Pending |
+| PROF-05 | Phase 5 | Pending |
+| WHEEL-01 | Phase 6 | Pending |
+| WHEEL-02 | Phase 6 | Pending |
+| WHEEL-03 | Phase 6 | Pending |
+| MACRO-01 | Phase 7 | Pending |
+| MACRO-02 | Phase 7 | Pending |
+| LIGHT-01 | Phase 8 | Pending |
+| PKG-01 | Phase 9 | Pending |
+| PKG-02 | Phase 9 | Pending |
 
 **Coverage:**
-- v1 requirements: 35 total
-- Mapped to phases: 0 ⚠️ (roadmap pending)
-- Unmapped: 35 ⚠️
+- v1 requirements: 40 total
+- Mapped to phases: 40 ✓
+- Unmapped: 0 ✓
+
+*Note: prior drafts referenced "35" requirements; the actual enumerated v1 requirement count is 40 (all committed to v1).*
 
 ---
 *Requirements defined: 2026-05-30*
-*Last updated: 2026-05-30 after initial definition*
+*Last updated: 2026-05-30 after roadmap creation (traceability populated)*
