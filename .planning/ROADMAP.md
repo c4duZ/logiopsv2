@@ -44,7 +44,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The running daemon shows systemd hardening in effect (`NoNewPrivileges`, `ProtectSystem`, restricted capabilities) verifiable via `systemctl show`/`systemd-analyze security`
   4. A malformed/short HID report does not cause an out-of-bounds read — report fields are length-checked before indexing
 **Plans**: 6 plans
-  - [ ] 01-01-PLAN.md — Wave 0 test harness: CTest hidpp-bounds unit + ACCESS-01/02/03 smoke scripts
+  - [x] 01-01-PLAN.md — Wave 0 test harness: CTest hidpp-bounds unit + ACCESS-01/02/03 smoke scripts
   - [ ] 01-02-PLAN.md — D-Bus policy relaxation to group=logiops (ACCESS-01)
   - [ ] 01-03-PLAN.md — systemd hardening of logid.service (ACCESS-03)
   - [ ] 01-04-PLAN.md — HID length-checks + CONCERNS #1/#5/#8 fixes (ACCESS-04)
@@ -156,7 +156,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Access Path & Daemon Hardening | 0/6 | Not started | - |
+| 1. Access Path & Daemon Hardening | 1/6 | In Progress|  |
 | 2. D-Bus Client & Device List | 0/TBD | Not started | - |
 | 3. Core Config UI & Persistence | 0/TBD | Not started | - |
 | 4. Fine-Grained Gesture Control | 0/TBD | Not started | - |
