@@ -1,22 +1,39 @@
 # LogiOps
 
-![Build Status](https://github.com/PixlOne/logiops/actions/workflows/build-test.yml/badge.svg)
+A Linux driver for Logitech mice and keyboards — with a graphical front-end.
 
-This is an unofficial driver for Logitech mice and keyboard.
+This is our adapted version of [logiops](https://github.com/PixlOne/logiops), maintained by c4duZ at <https://github.com/c4duZ/logiopsv2>. The original project is a powerful but config-file-only daemon. **Our goal is to bring a polished, Logi Options+-style experience to Linux**: a Qt 6 + QML desktop app on top of the existing `logid` daemon, so you can configure your device visually instead of editing `/etc/logid.cfg` by hand.
 
-This is currently only compatible with HID++ \>2.0 devices.
+Distributed under GPL-3.0. Currently only compatible with HID++ \>2.0 devices.
+
+## What we're building
+
+We keep the proven `logid` daemon as the source of truth and extend it only where a feature genuinely needs it. The work is staged so real value lands early (a working device list and visual config) before the higher-risk features.
+
+| # | Feature | What it gives you |
+|---|---------|-------------------|
+| 1 | **Access & daemon hardening** | Use the daemon as a non-root user (via a `logiops` group), with privileged saves gated by polkit and the daemon sandboxed |
+| 2 | **Device list** | A live GUI list of your connected Logitech devices with battery and connection status, updating on hotplug |
+| 3 | **Core config UI** | Visual button remapping, DPI, scroll/SmartShift/thumbwheel, and manual profiles — saved without ever editing a text file |
+| 4 | **Fine-grained gestures** | A guided gesture builder that fires *exactly once* or repeats predictably (no more "volume jumps by 2") |
+| 5 | **Per-app profiles** | Profiles that auto-switch with the focused app (X11 + Wayland), plus profile import/export |
+| 6 | **Action wheel** | A radial action menu at the cursor — flick toward a slice and release to fire it |
+| 7 | **Smart actions / macros** | Multi-step actions (keystrokes, text, media, delays, launch app/URL) bound to one button |
+| 8 | **Keyboard backlight** | Backlight/RGB control on supported keyboards |
+| 9 | **Debian packaging** | A clean `.deb` that ships the policy, polkit action, and systemd unit |
+
+Detailed planning lives in [`.planning/`](./.planning/) (roadmap, requirements, and per-phase plans).
 
 ## Configuration
-[Refer to the wiki for details.](https://github.com/PixlOne/logiops/wiki/Configuration)
 
-You may also refer to [logid.example.cfg](./logid.example.cfg) for an example.
+Until the GUI lands, configuration is done through the daemon's config file. See [logid.example.cfg](./logid.example.cfg) for an example.
 
-Default location for the configuration file is /etc/logid.cfg, but another can be specified using the `-c` flag.
+The default location is `/etc/logid.cfg`, but another can be specified with the `-c` flag. For protocol and option details, the upstream [logiops wiki](https://github.com/PixlOne/logiops/wiki/Configuration) is still a useful reference.
 
 ## Dependencies
 
 This project requires a C++20 compiler, `cmake`, `libevdev`, `libudev`, `glib`, and `libconfig`.
-For popular distributions, I've included commands below.
+Commands for popular distributions:
 
 **Arch Linux:** `sudo pacman -S base-devel cmake libevdev libconfig systemd-libs glib2`
 
@@ -41,20 +58,13 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
 
-To install, run `sudo make install` after building. You can set the daemon to start at boot by running `sudo systemctl enable logid` or `sudo systemctl enable --now logid` if you want to enable and start the daemon.
+To install, run `sudo make install` after building. You can set the daemon to start at boot by running `sudo systemctl enable logid` or `sudo systemctl enable --now logid` to enable and start the daemon.
 
 ## Development
 
-The project may only run as root, but for development purposes, you may find it
-convenient to run as non-root on the user bus. You must compile with the CMake
-flag `-DUSE_USER_BUS=ON` to use the user bus.
-
-## Donate
-This program is (and will always be) provided free of charge. If you would like to support the development of this project by donating, you can donate to my Ko-Fi below.
-
-<a href='https://ko-fi.com/R6R81QQ9M' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://cdn.ko-fi.com/cdn/kofi1.png?v=2' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
-
-I'm also looking for contributors to help in my project; feel free to submit a pull request or e-mail me if you would like to contribute.
+The daemon normally runs as root, but for development you may find it convenient
+to run as non-root on the user bus. Compile with the CMake flag
+`-DUSE_USER_BUS=ON` to use the user bus.
 
 ## Compatible Devices
 
@@ -62,11 +72,13 @@ I'm also looking for contributors to help in my project; feel free to submit a p
 
 ## Credits
 
+This project is an adaptation of [logiops](https://github.com/PixlOne/logiops) by PixlOne and its contributors. All of their original work remains under GPL-3.0.
+
 Logitech, Logi, and their logos are trademarks or registered trademarks of Logitech Europe S.A. and/or its affiliates in the United States and/or other countries. This software is an independent product that is not endorsed or created by Logitech.
 
-Thanks to the following people for contributing to this repository.
+Thanks to everyone who contributed to the upstream project, and in particular:
 
-- [Clément Vuchener & contributors for creating the old HID++ library](https://github.com/cvuchener/hidpp)
-- [Developers of Solaar for providing information on HID++](https://github.com/pwr-Solaar/Solaar)
+- [Clément Vuchener & contributors for the old HID++ library](https://github.com/cvuchener/hidpp)
+- [The Solaar developers for providing information on HID++](https://github.com/pwr-Solaar/Solaar)
 - [Nestor Lopez Casado for providing Logitech documentation on the HID++ protocol](http://drive.google.com/folderview?id=0BxbRzx7vEV7eWmgwazJ3NUFfQ28)
-- Everyone listed in the contributors page
+- Everyone listed in the upstream contributors page
