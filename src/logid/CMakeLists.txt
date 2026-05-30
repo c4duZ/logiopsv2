@@ -75,6 +75,7 @@ pkg_check_modules(PC_EVDEV libevdev REQUIRED)
 pkg_check_modules(SYSTEMD "systemd")
 pkg_check_modules(LIBCONFIG libconfig REQUIRED)
 pkg_check_modules(LIBUDEV libudev REQUIRED)
+pkg_check_modules(POLKIT REQUIRED polkit-gobject-1)
 
 find_path(EVDEV_INCLUDE_DIR libevdev/libevdev.h
         HINTS ${PC_EVDEV_INCLUDE_DIRS} ${PC_EVDEV_INCLUDEDIR})
@@ -84,10 +85,11 @@ find_library(EVDEV_LIBRARY
 set(IPCGULL_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../ipcgull/src/include)
 message(${IPCGULL_INCLUDE_DIRS})
 
-include_directories(. ${EVDEV_INCLUDE_DIR} ${LIBUDEV_INCLUDE_DIRECTORIES} ${IPCGULL_INCLUDE_DIRS})
+include_directories(. ${EVDEV_INCLUDE_DIR} ${LIBUDEV_INCLUDE_DIRECTORIES} ${IPCGULL_INCLUDE_DIRS}
+        ${POLKIT_INCLUDE_DIRS})
 
 target_link_libraries(logid ${CMAKE_THREAD_LIBS_INIT} ${EVDEV_LIBRARY} config++
-        ${LIBUDEV_LIBRARIES} ipcgull)
+        ${LIBUDEV_LIBRARIES} ipcgull ${POLKIT_LIBRARIES})
 
 install(TARGETS logid DESTINATION bin)
 
@@ -117,4 +119,12 @@ configure_file(logiops-dbus.conf.in ${CMAKE_BINARY_DIR}/pizza.pixl.LogiOps.conf)
 message(STATUS "dbus system policy will be installed at ${DBUS_SYSTEM_POLICY_INSTALL_DIR}")
 install(FILES ${CMAKE_BINARY_DIR}/pizza.pixl.LogiOps.conf
         DESTINATION ${DBUS_SYSTEM_POLICY_INSTALL_DIR}
+        COMPONENT cp)
+
+# Install polkit action (gates Configuration::save() behind auth_admin_keep)
+set(POLKIT_ACTION_INSTALL_DIR "/usr/share/polkit-1/actions")
+configure_file(logiops-policy.policy.in ${CMAKE_BINARY_DIR}/pizza.pixl.logiops.policy)
+message(STATUS "polkit action will be installed at ${POLKIT_ACTION_INSTALL_DIR}")
+install(FILES ${CMAKE_BINARY_DIR}/pizza.pixl.logiops.policy
+        DESTINATION ${POLKIT_ACTION_INSTALL_DIR}
         COMPONENT cp)
