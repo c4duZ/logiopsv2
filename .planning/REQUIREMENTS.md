@@ -17,7 +17,7 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 ### Devices
 
 - [ ] **DEV-01**: User can see a list of all connected Logitech devices in the app
-- [ ] **DEV-02**: User can see live battery percentage and charging state per device
+- [x] **DEV-02**: User can see live battery percentage and charging state per device
 - [ ] **DEV-03**: User can see live connection status (online/offline, receiver-paired) that updates on hotplug without restarting the app
 - [ ] **DEV-04**: User can see each device's name/model
 
@@ -119,7 +119,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | ACCESS-03 | Phase 1 | Complete |
 | ACCESS-04 | Phase 1 | Complete |
 | DEV-01 | Phase 2 | Pending |
-| DEV-02 | Phase 2 | Pending |
+| DEV-02 | Phase 2 | Complete |
 | DEV-03 | Phase 2 | Pending |
 | DEV-04 | Phase 2 | Pending |
 | CONF-03 | Phase 2 | Pending |
