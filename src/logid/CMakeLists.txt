@@ -65,6 +65,7 @@ add_executable(logid
         backend/hidpp20/features/HiresScroll.cpp
         backend/hidpp20/features/ChangeHost.cpp
         backend/hidpp20/features/WirelessDeviceStatus.cpp
+        backend/hidpp20/features/BatteryStatus.cpp
         backend/hidpp20/features/ThumbWheel.cpp
         util/task.cpp
         util/ExceptionHandler.cpp)

@@ -32,8 +32,14 @@ if(Qt6_FOUND)
     add_test(NAME device_model_noflicker COMMAND device_model_test test_status_noflicker)
 
     # BatteryStatus decoder unit — header-includes the daemon backend (Plan 02),
-    # no link to the full logid target (mirrors hidpp_bounds_test).
-    add_executable(battery_feature_test BatteryStatusTest.cpp)
+    # no link to the full logid target (mirrors hidpp_bounds_test). The pure
+    # decoder BatteryStatus::decodeStatus() is header-inline; only Report's
+    # non-inline methods (ctors/setParams/paramBegin) need linking, so we
+    # compile Report.cpp directly into the unit rather than dragging in the
+    # whole logid target (which pulls libconfig/udev/evdev/ipcgull).
+    add_executable(battery_feature_test
+            BatteryStatusTest.cpp
+            ${CMAKE_SOURCE_DIR}/src/logid/backend/hidpp/Report.cpp)
     target_include_directories(battery_feature_test PRIVATE ${CMAKE_SOURCE_DIR}/src/logid)
     target_link_libraries(battery_feature_test PRIVATE Qt6::Test)
     set_target_properties(battery_feature_test PROPERTIES
