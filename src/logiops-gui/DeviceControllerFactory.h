@@ -26,6 +26,7 @@
 namespace logiops_gui {
 
 class DeviceController;
+class ButtonsModel;
 
 /*
  * DeviceControllerFactory — owns the single "currently selected device"
@@ -43,12 +44,17 @@ class DeviceControllerFactory final : public QObject {
     Q_OBJECT
 
     Q_PROPERTY(logiops_gui::DeviceController* controller READ controller NOTIFY controllerChanged)
+    // The per-device Buttons model for the Buttons tab (BTN-01..04), swapped in
+    // lock-step with the controller. Its hostCount is seeded from the controller
+    // (HOST-01: the daemon's ChangeHost.GetHostCount, via the controller).
+    Q_PROPERTY(logiops_gui::ButtonsModel* buttonsModel READ buttonsModel NOTIFY controllerChanged)
 
 public:
     explicit DeviceControllerFactory(QObject* parent = nullptr);
     ~DeviceControllerFactory() override;
 
     [[nodiscard]] DeviceController* controller() const { return _controller; }
+    [[nodiscard]] ButtonsModel* buttonsModel() const { return _buttonsModel; }
 
     // Build (or rebuild) the controller for the given device object-path. An
     // empty path clears the selection. No-op when the path is unchanged.
@@ -60,6 +66,7 @@ signals:
 private:
     QDBusConnection _bus;
     DeviceController* _controller = nullptr;
+    ButtonsModel* _buttonsModel = nullptr;
     QString _currentPath;
 };
 

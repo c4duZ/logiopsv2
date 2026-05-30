@@ -97,6 +97,10 @@ qt_add_qml_module(logiops-gui
             qml/DetailPane.qml
             qml/config/ConfigTabs.qml
             qml/config/ButtonsTab.qml
+            qml/config/DeviceRender.qml
+            qml/config/BindingList.qml
+            qml/config/ReassignPanel.qml
+            qml/config/KeyCaptureField.qml
             qml/config/PointerTab.qml
             qml/config/ScrollTab.qml
             qml/config/ProfilesTab.qml

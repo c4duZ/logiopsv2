@@ -37,11 +37,12 @@ Item {
         anchors.fill: parent
         currentIndex: root.currentIndex
 
-        // One placeholder body per visible tab. Wave 2 replaces these Items with
-        // the real tab content; the title proves the gating + index wiring.
+        // One body per visible tab. Wave 2 fills these in; "buttons" now loads the
+        // real ButtonsTab (Plan 02), the rest stay placeholders until their plans.
         Repeater {
             model: root.tabKeys
             delegate: Item {
+                id: tabBody
                 required property string modelData
                 required property int index
 
@@ -51,21 +52,38 @@ Item {
                     NumberAnimation { duration: Theme.motionFast; easing.type: Theme.motionEasing }
                 }
 
+                // Real content for implemented tabs; placeholder label otherwise.
+                Loader {
+                    anchors.fill: parent
+                    active: tabBody.modelData === "buttons"
+                    sourceComponent: tabBody.modelData === "buttons" ? buttonsTabComponent : null
+                }
+
                 Text {
                     anchors.centerIn: parent
+                    visible: tabBody.modelData !== "buttons"
                     text: {
-                        switch (modelData) {
-                        case "buttons":  return qsTr("Buttons");
+                        switch (tabBody.modelData) {
                         case "pointer":  return qsTr("Pointer");
                         case "scroll":   return qsTr("Scroll");
                         case "profiles": return qsTr("Profiles");
-                        default:         return modelData;
+                        default:         return tabBody.modelData;
                         }
                     }
                     color: Theme.mutedForeground
                     font.pixelSize: Theme.bodySize
                 }
             }
+        }
+    }
+
+    // The Buttons tab content (BTN-01..04, HOST-01). Instantiated lazily by the
+    // Loader above so non-Buttons tabs cost nothing.
+    Component {
+        id: buttonsTabComponent
+        ButtonsTab {
+            controller: root.controller
+            buttonsModel: deviceControllerFactory.buttonsModel
         }
     }
 }

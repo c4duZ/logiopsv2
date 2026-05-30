@@ -20,11 +20,37 @@
 #include "DeviceController.h"
 #include "DeviceControllerFactory.h"
 #include "DeviceModel.h"
+#include "KeyNameMapper.h"
 
 #include <QGuiApplication>
+#include <QObject>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QStringList>
 #include <QUrl>
+#include <QVariant>
+
+namespace {
+// Thin QObject facade exposing KeyNameMapper's static mapping to QML (the
+// key-capture widget calls comboToEvdev to turn captured Qt key+modifiers into
+// the evdev KEY_* names ButtonsModel.setKeypress expects). QML renders only —
+// this is the C++ side of BTN-02.
+class KeyNameBridge : public QObject {
+    Q_OBJECT
+public:
+    using QObject::QObject;
+    Q_INVOKABLE QStringList comboToEvdev(const QVariantList& modifiers, int key) const {
+        QList<int> mods;
+        mods.reserve(modifiers.size());
+        for (const QVariant& m : modifiers)
+            mods.push_back(m.toInt());
+        return logiops_gui::KeyNameMapper::comboToEvdev(mods, key);
+    }
+    Q_INVOKABLE QString toEvdevName(int key) const {
+        return logiops_gui::KeyNameMapper::toEvdevName(key);
+    }
+};
+} // namespace
 
 // Entry point for the logiops-gui client. C++ owns ALL state: it constructs the
 // DeviceModel (QAbstractListModel) and the DaemonConnection (live system-bus
@@ -44,12 +70,15 @@ int main(int argc, char* argv[]) {
     // factory builds + introspects a fresh controller per device). QML renders
     // only — capability discovery + marshalling stay in C++ (CONTEXT.md).
     logiops_gui::DeviceControllerFactory controllerFactory;
+    // BTN-02 key-capture -> evdev names bridge (static mapper exposed to QML).
+    KeyNameBridge keyNames;
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty(QStringLiteral("deviceModel"), &model);
     engine.rootContext()->setContextProperty(QStringLiteral("daemon"), &daemon);
     engine.rootContext()->setContextProperty(QStringLiteral("deviceControllerFactory"),
                                              &controllerFactory);
+    engine.rootContext()->setContextProperty(QStringLiteral("keyNames"), &keyNames);
 
     // Load the shell from the qt_add_qml_module resource. Qt 6.4.2 has no
     // QQmlApplicationEngine::loadFromModule (that is 6.5+), so load the module's
@@ -71,3 +100,6 @@ int main(int argc, char* argv[]) {
 
     return QGuiApplication::exec();
 }
+
+// KeyNameBridge has Q_OBJECT in this TU; pull in its generated meta-object.
+#include "main.moc"

@@ -357,6 +357,20 @@ void ButtonsModel::enumerate() {
                             break;
                         }
                     }
+                    // HOST-01: if this button currently carries a ChangeHost
+                    // action, the daemon exposes the device's paired-host count on
+                    // that action interface (ChangeHost.GetHostCount, added in this
+                    // plan). Read it best-effort to render accurate host slots; a
+                    // 0/absent count leaves the default (next/prev always cover it).
+                    if (b.currentActionType == QLatin1String("ChangeHost")) {
+                        QDBusInterface ch(
+                            kService, b.path,
+                            QStringLiteral("pizza.pixl.LogiOps.Action.ChangeHost"), _bus);
+                        QDBusReply<uchar> hc = ch.call(QStringLiteral("GetHostCount"));
+                        if (hc.isValid() && static_cast<int>(hc.value()) > 0)
+                            setHostCount(static_cast<int>(hc.value()));
+                    }
+
                     b.currentActionSummary = defaultSummary(b.currentActionType);
                     b.name = tr("Button (CID 0x%1)").arg(b.controlId, 0, 16);
                     rows.push_back(b);

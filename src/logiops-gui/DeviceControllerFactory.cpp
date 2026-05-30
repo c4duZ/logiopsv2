@@ -17,6 +17,7 @@
  *
  */
 #include "DeviceControllerFactory.h"
+#include "ButtonsModel.h"
 #include "DeviceController.h"
 
 namespace logiops_gui {
@@ -43,14 +44,30 @@ void DeviceControllerFactory::selectDevice(const QString& devicePath) {
         return;
     _currentPath = devicePath;
 
-    // Tear down the previous controller (it owns its proxies as children).
+    // Tear down the previous controller + buttons model (both own their proxies
+    // as children).
     if (_controller != nullptr) {
         _controller->deleteLater();
         _controller = nullptr;
     }
+    if (_buttonsModel != nullptr) {
+        _buttonsModel->deleteLater();
+        _buttonsModel = nullptr;
+    }
 
-    if (!devicePath.isEmpty())
+    if (!devicePath.isEmpty()) {
         _controller = new DeviceController(devicePath, _bus, this);
+        _buttonsModel = new ButtonsModel(devicePath, _bus, this);
+        // HOST-01: drive the Buttons model's host-slot count from the device
+        // (the controller's hostCount, wired from the daemon's ChangeHost
+        // GetHostCount). Seed now and keep it synced as capabilities resolve.
+        _buttonsModel->setHostCount(_controller->hostCount());
+        connect(_controller, &DeviceController::capabilitiesChanged, _buttonsModel,
+                [this]() {
+                    if (_buttonsModel && _controller)
+                        _buttonsModel->setHostCount(_controller->hostCount());
+                });
+    }
 
     emit controllerChanged();
 }
