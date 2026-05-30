@@ -46,6 +46,19 @@ if(Qt6_FOUND)
             CXX_STANDARD 20
             CXX_STANDARD_REQUIRED ON)
     add_test(NAME battery_feature COMMAND battery_feature_test)
+
+    # UnifiedBattery (0x1004) decoder unit — modern battery path (MX Master
+    # 3/3S/4). Mirrors battery_feature; same dependency-free pattern (header-
+    # inline decoder + Report.cpp compiled in, no link to the logid target).
+    add_executable(unified_battery_test
+            UnifiedBatteryTest.cpp
+            ${CMAKE_SOURCE_DIR}/src/logid/backend/hidpp/Report.cpp)
+    target_include_directories(unified_battery_test PRIVATE ${CMAKE_SOURCE_DIR}/src/logid)
+    target_link_libraries(unified_battery_test PRIVATE Qt6::Test)
+    set_target_properties(unified_battery_test PROPERTIES
+            CXX_STANDARD 20
+            CXX_STANDARD_REQUIRED ON)
+    add_test(NAME unified_battery COMMAND unified_battery_test)
 else()
     message(WARNING "Qt6 not found — skipping device_model/battery_feature units")
 endif()

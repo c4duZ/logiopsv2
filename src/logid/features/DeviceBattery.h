@@ -22,11 +22,18 @@
 #include <features/DeviceFeature.h>
 #include <Device.h>
 #include <backend/hidpp20/features/BatteryStatus.h>
+#include <backend/hidpp20/features/UnifiedBattery.h>
 
 namespace logid::features {
     /* Not `final`: the framework's _featureWrapper<T> derives from this type
      * (DeviceFeature::make), so the leaf class must remain open. Leaf-ness is
-     * instead expressed via `final` on each override (mirrors DeviceStatus). */
+     * instead expressed via `final` on each override (mirrors DeviceStatus).
+     *
+     * Battery source preference: modern devices (MX Master 3/3S/4) report via
+     * HID++ 0x1004 UnifiedBattery; older devices via 0x1000 BatteryStatus. The
+     * ctor tries 0x1004 first and falls back to 0x1000. Whichever resolves,
+     * both feed the SAME Device::setBattery() / BatteryChanged path — the
+     * .Device interface shape is unchanged. */
     class DeviceBattery : public DeviceFeature {
     public:
         void configure() final;
@@ -40,6 +47,9 @@ namespace logid::features {
 
     private:
         EventHandlerLock<backend::hidpp::Device> _ev_handler;
+        // Exactly one of these is non-null. _unified_battery (0x1004) is
+        // preferred; _battery_status (0x1000) is the fallback.
+        std::shared_ptr<backend::hidpp20::UnifiedBattery> _unified_battery;
         std::shared_ptr<backend::hidpp20::BatteryStatus> _battery_status;
     };
 }

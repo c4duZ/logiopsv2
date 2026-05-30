@@ -25,18 +25,23 @@ key-files:
   created:
     - src/logid/backend/hidpp20/features/BatteryStatus.h
     - src/logid/backend/hidpp20/features/BatteryStatus.cpp
+    - src/logid/backend/hidpp20/features/UnifiedBattery.h
+    - src/logid/backend/hidpp20/features/UnifiedBattery.cpp
     - src/logid/features/DeviceBattery.h
     - src/logid/features/DeviceBattery.cpp
+    - test/UnifiedBatteryTest.cpp
   modified:
     - src/logid/Device.h
     - src/logid/Device.cpp
     - src/logid/CMakeLists.txt
+    - src/logid/backend/hidpp20/feature_defs.h
     - test/CMakeLists.txt
 decisions:
   - "decodeStatus is header-inline so the dependency-free battery_feature unit links without the full daemon (Feature::callFunction would drag in hidpp20::Device + the whole logid target)"
   - "Bounds guard distinguishes a real battery report from a short/unresolved one via Long-type + non-zero feature index + >=3 params; a too-short report yields known=false with no OOB"
   - "DeviceBattery is not 'final' because the framework _featureWrapper<T> derives from it; leaf-ness expressed via final overrides (mirrors DeviceStatus)"
-  - "Scope held to 0x1000 only — no 0x1001/0x1004, no charging prediction (CONTEXT decision D)"
+  - "Scope held to 0x1000 + 0x1004 read paths only — no 0x1001, no charging prediction (CONTEXT decision D); 0x1004 added as a follow-up so modern devices (MX Master 3/3S/4) report live battery"
+  - "DeviceBattery PREFERS 0x1004 UnifiedBattery, falls back to 0x1000 BatteryStatus; both feed the identical Device::setBattery()/BatteryChanged path — the .Device interface shape is unchanged"
 metrics:
   duration: ~25 min
   tasks: 2
@@ -65,6 +70,56 @@ Real, signal-driven battery for DEV-02: a HID++ 2.0 `BatteryStatus` (0x1000) bac
 - **Decoder GREEN (RED→GREEN):** the `battery_feature` unit's three asserts (80% discharging→charging=false/known=true; status 0x01→charging=true; short report→known=false) all pass. Proven via a standalone non-Qt driver that mirrors the unit's exact `makeBatteryReport` construction and `QCOMPARE` expectations, compiled with `-Wall -Wextra -Werror` and run (RESULT: GREEN, exit 0).
 - **Daemon compiles clean under `-Werror`** (CI flags) with both new features registered.
 - `_addFeature<features::DeviceBattery>`, `BatteryChanged`, and `features/DeviceBattery.cpp` grep-verified present (Task 2 automated check: PASS).
+
+## Follow-up addition — 0x1004 UnifiedBattery (modern devices)
+
+After the initial 0x1000-only landing, the battery support was extended to ALSO
+speak HID++ 2.0 feature **0x1004 UnifiedBattery**, the path used by recent
+devices (MX Master 3/3S/4) which often do NOT support legacy 0x1000. The
+`.Device` D-Bus interface shape is **unchanged** — both feature wrappers feed the
+identical `Device::setBattery()` / `BatteryChanged` path.
+
+- **`feature_defs.h`:** added `UNIFIED_BATTERY = 0x1004` to the `FeatureID` enum.
+- **`UnifiedBattery.{h,cpp}` (new wrapper, mirrors `BatteryStatus`):** `ID =
+  FeatureID::UNIFIED_BATTERY`, `Function::{GetCapabilities=0, GetStatus=1}`,
+  `Event::StatusBroadcast = 1`, same `Status{percentage, charging, known}`
+  shape. Header-inline **pure `decodeStatus(report)`** with the SAME untrusted-
+  HID bounds discipline (V5 / ACCESS-04): non-Long / unresolved (feature index
+  0) / `<3` param bytes → `{0,false,false}` (known=false), never an OOB read.
+  `getStatus()` calls function 1 and re-wraps the response params in a Long
+  report carrying the resolved feature index before decoding (same idiom as the
+  0x1000 wrapper). Added to the daemon CMake source list after
+  `BatteryStatus.cpp`.
+- **`DeviceBattery.{h,cpp}`:** now holds both a `_unified_battery` (0x1004,
+  preferred) and a `_battery_status` (0x1000, fallback) shared_ptr; exactly one
+  is non-null. The ctor tries 0x1004 first and, on `hidpp20::UnsupportedFeature`,
+  falls back to 0x1000; if both are absent it rethrows `features::
+  UnsupportedFeature` (device skipped, BatteryKnown=false — unchanged). Both
+  `configure()` (one-shot initial read) and `listen()` (broadcast event handler)
+  branch on whichever wrapper resolved, decoding via the matching
+  `decodeStatus()` and pushing through `Device::setBattery(...)`.
+- **`UnifiedBatteryTest.cpp` (new unit):** mirrors `BatteryStatusTest` for the
+  0x1004 wire format — 80%/discharging→charging=false, status 1→charging=true,
+  status 4 (charging error)→charging=false, and the short-report bounds-guard
+  (known=false). Registered as ctest target `unified_battery`.
+
+**Wire-format confidence (0x1004): MEDIUM.** Decoded against cvuchener/hidpp +
+libratbag references (function 0x00 getCapabilities, function 0x01 getStatus:
+`param[0]` stateOfCharge percentage, `param[1]` discrete batteryLevel, `param[2]`
+chargingStatus enum 0=discharging / 1=charging / 2=slow-or-nearly-full /
+3=complete / 4=error, `param[3]` externalPower). Treated chargingStatus in
+{1,2,3} as charging; 4 (error) as not-charging-but-known. Not confirmed against
+live MX Master 3/3S/4 hardware in this session — verify with `busctl --system
+introspect .../devices/0` (`Battery`/`Charging`/`BatteryKnown` should populate
+live) once a modern device + daemon are present.
+
+**Build/test result:** `cmake -S . -B build -DBUILD_TESTING=ON
+-DCMAKE_CXX_FLAGS="-Werror"` + `cmake --build build` builds the `logid` daemon
+clean under `-Werror` with the new `UnifiedBattery.cpp` compiled in.
+`ctest --test-dir build -R battery` → **both `battery_feature` (0x1000) and
+`unified_battery` (0x1004) PASS** (Qt6 present this session). The pre-existing
+`device_model_test` (Plan 03, missing `DeviceModel.h`, RED-by-design) is the only
+build failure and is out of scope for this change.
 
 ## Battery feature ID note (research A7)
 
