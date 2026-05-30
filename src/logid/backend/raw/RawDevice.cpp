@@ -230,7 +230,11 @@ void RawDevice::_readReports() {
     ssize_t len;
 
     while (-1 != (len = ::read(_fd, buf, max_data_length))) {
-        assert(len <= max_data_length);
+        if (len < 0 || len > max_data_length) {
+            logPrintf(WARN, "Ignoring HID read of unexpected length %zd on %s",
+                      (ssize_t)len, _path.c_str());
+            continue;   // do not construct a report from a bogus length
+        }
         std::vector<uint8_t> report(buf, buf + len);
 
         if (logid::global_loglevel <= LogLevel::RAWREPORT) {

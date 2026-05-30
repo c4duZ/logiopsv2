@@ -24,16 +24,16 @@
 
 using namespace logid;
 
-void ExceptionHandler::Default(std::exception& error) {
+void ExceptionHandler::Default([[maybe_unused]] std::exception& error) {
     try {
-        throw error;
+        throw;   // rethrow the active exception, preserving dynamic type
     } catch (backend::hidpp10::Error& e) {
-        logPrintf(WARN, "HID++ 1.0 error ignored on task: %s", error.what());
+        logPrintf(WARN, "HID++ 1.0 error ignored on task: %s", e.what());
     } catch (backend::hidpp20::Error& e) {
-        logPrintf(WARN, "HID++ 2.0 error ignored on task: %s", error.what());
+        logPrintf(WARN, "HID++ 2.0 error ignored on task: %s", e.what());
     } catch (std::system_error& e) {
-        logPrintf(WARN, "System error ignored on task: %s", error.what());
+        logPrintf(WARN, "System error ignored on task: %s", e.what());
     } catch (std::exception& e) {
-        logPrintf(WARN, "Error ignored on task: %s", error.what());
+        logPrintf(WARN, "Error ignored on task: %s", e.what());
     }
 }
