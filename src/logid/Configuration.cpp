@@ -85,6 +85,16 @@ bool Configuration::checkSaveAuthorized(const std::string& callerBusName) {
     // NOTE (RESEARCH A9, T-01-06-04 = accept): this _sync call blocks the GLib main-loop
     // dispatch thread while the polkit agent prompts. Acceptable for the rare save action;
     // flagged for an async/deferred-reply follow-up only if a real bus stall is observed.
+    //
+    // ACCEPTED-DEFERRED (REVIEW WR-01): because save() runs on the dispatch thread under
+    // ipcgull's server_lock (recursive_mutex), that lock is held for the full duration of
+    // the prompt. Any concurrent emit_signal / add_interface / drop_interface (e.g. a device
+    // hotplug) will block until the user responds or the polkit prompt times out. A clean
+    // mitigation (dropping server_lock here, or moving to async polkit_authority_
+    // check_authorization with a deferred D-Bus reply) cannot be done without restructuring
+    // the synchronous same-thread dispatch/locking model, which save() depends on for
+    // current_caller(). Deferred to a follow-up to avoid destabilizing dispatch; revisit if a
+    // real stall is observed in the field.
     PolkitAuthorizationResult* result = polkit_authority_check_authorization_sync(
             authority, subject, "pizza.pixl.logiops.save-config", nullptr,
             POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION, nullptr, &error);
