@@ -31,8 +31,8 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 ### Pointer / DPI
 
 - [x] **DPI-01**: User can adjust DPI/sensitivity with a slider bounded by the device's reported min/max
-- [ ] **DPI-02**: User can define a set of DPI levels to cycle through
-- [ ] **DPI-03**: User can label DPI presets with names
+- [x] **DPI-02**: User can define a set of DPI levels to cycle through
+- [x] **DPI-03**: User can label DPI presets with names
 
 ### Scroll
 
@@ -128,8 +128,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | BTN-03 | Phase 3 | Complete |
 | BTN-04 | Phase 3 | Complete |
 | DPI-01 | Phase 3 | Complete |
-| DPI-02 | Phase 3 | Pending |
-| DPI-03 | Phase 3 | Pending |
+| DPI-02 | Phase 3 | Complete |
+| DPI-03 | Phase 3 | Complete |
 | SCR-01 | Phase 3 | Complete |
 | SCR-02 | Phase 3 | Complete |
 | SCR-03 | Phase 3 | Complete |

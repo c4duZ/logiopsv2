@@ -83,7 +83,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   - [x] 03-00-PLAN.md — Wave 0: BLOCKING save() round-trip + unknown-key CTest, KeyNameMapper, seven typed D-Bus proxies
   - [x] 03-01-PLAN.md — DeviceController capability model + tabbed DetailPane shell + Theme tokens/glyphs (UI-01)
   - [x] 03-02-PLAN.md — Buttons tab: device render + binding list + non-modal reassign panel + key-capture (BTN-01..04, HOST-01)
-  - [ ] 03-03-PLAN.md — Pointer + Scroll tabs: DPI slider/cycle/labels + SmartShift/hires/thumbwheel (DPI-01..03, SCR-01..03)
+  - [x] 03-03-PLAN.md — Pointer + Scroll tabs: DPI slider/cycle/labels + SmartShift/hires/thumbwheel (DPI-01..03, SCR-01..03)
   - [ ] 03-04-PLAN.md — Profiles tab + unsaved indicator + async polkit Save + restore-defaults (PROF-01, CONF-01, CONF-02)
 **UI hint**: yes
 **Research flag**: Verify `Configuration::save()` round-trip fidelity (libconfig comment/formatting preservation) before relying on it as the only persistence path.
