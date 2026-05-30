@@ -45,7 +45,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. A malformed/short HID report does not cause an out-of-bounds read — report fields are length-checked before indexing
 **Plans**: 6 plans
   - [x] 01-01-PLAN.md — Wave 0 test harness: CTest hidpp-bounds unit + ACCESS-01/02/03 smoke scripts
-  - [ ] 01-02-PLAN.md — D-Bus policy relaxation to group=logiops (ACCESS-01)
+  - [x] 01-02-PLAN.md — D-Bus policy relaxation to group=logiops (ACCESS-01)
   - [ ] 01-03-PLAN.md — systemd hardening of logid.service (ACCESS-03)
   - [ ] 01-04-PLAN.md — HID length-checks + CONCERNS #1/#5/#8 fixes (ACCESS-04)
   - [ ] 01-05-PLAN.md — ipcgull caller-threading: ipcgull::current_caller() (ACCESS-02 foundation)
