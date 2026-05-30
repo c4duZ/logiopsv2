@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-05-PLAN.md (human-verify documented)
-last_updated: "2026-05-30T20:57:11.360Z"
+stopped_at: "Completed 03-00-PLAN.md (Wave-0 gate: CONF-01 round-trip GREEN)"
+last_updated: "2026-05-30T23:03:39.220Z"
 last_activity: 2026-05-30
 progress:
   total_phases: 9
   completed_phases: 2
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  total_plans: 16
+  completed_plans: 12
+  percent: 75
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-30)
 
 **Core value:** Bring the full Logitech Options+ experience to Linux — configure a Logitech device through a real GUI instead of hand-editing `/etc/logid.cfg`.
-**Current focus:** Phase 2 — D-Bus Client & Device List
+**Current focus:** Phase 03 — Core Config UI & Persistence
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-30
+Phase: 03 (Core Config UI & Persistence) — EXECUTING
+Plan: 2 of 5
+Status: Executing Phase 03 (Wave 0 gate complete)
+Last activity: 2026-05-30 -- Completed 03-00 (CONF-01 round-trip GREEN)
 
-Progress: [██░░░░░░░░] 17%
+Progress: [███████▌░░] 75%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase 02 P03 | 18 | 2 tasks | 5 files |
 | Phase 02-d-bus-client-device-list P04 | 40 | 2 tasks | 15 files |
 | Phase 02-d-bus-client-device-list P05 | 18 | 2 tasks | 9 files |
+| Phase 03-core-config-ui-persistence P00 | 66 | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 02-d-bus-client-device-list]: [Phase 2]: Typed qdbusxml2cpp proxies (PizzaPixlLogiOps{Devices,Device}Interface) + signal-driven DeviceModel (QAbstractListModel) landed; rows come ONLY from Enumerate+DeviceAdded/Removed/StatusChanged (CONF-03, no cache), StatusChanged emits per-role dataChanged for ConnectionStateRole only (no-flicker, stable nickname sort), beginResetModel reserved for clear()/reconnect. device_model+device_model_noflicker GREEN, -Werror clean. Battery slot/roles present-but-unwired (Plan 05). Caught: '--' and '<' in XML comments silently broke qdbusxml2cpp into empty proxies.
 - [Phase 02-d-bus-client-device-list]: [Phase 2]: logiops-gui running app landed — DaemonConnection (system-bus connect + QDBusServiceWatcher NameOwnerChanged reconnect + async Enumerate/per-device Properties.GetAll, no UI block) drives DeviceModel; ScreenState enum maps AccessDenied (group policy) vs DaemonDown (no owner) vs Empty vs Populated; QML StackLayout indexed by screenState gives 4 distinct full-window states; SystemPalette-luminance dark theme (Qt 6.4.2, no colorScheme). -Werror clean, 5/5 unit tests green. Battery is a '—' stub (Plan 05). Caught: loadFromModule is 6.5+ (load via qrc prefer-prefix); runtime needs base qml6-module-qtquick installed.
 - [Phase 02-d-bus-client-device-list]: [Phase 2]: Live battery wired end-to-end (DEV-02) — .Device proxy XML gains Battery/Charging/BatteryKnown+BatteryChanged; DaemonConnection subscribes BatteryChanged -> DeviceModel.onBatteryChanged (no polling, CONF-03) + seeds initial from the GetAll snapshot; DeviceDelegate draws glyph+fill+% with >20% green/<=20% amber thresholds, always-green charging bolt, '—' when BatteryKnown=false, per-role bindings (test_battery_noflicker green). Caught: font.features is Qt 6.7+ (target 6.4.2) -> stable % width via TextMetrics instead; battery glyph drawn in QML primitives to tint without Qt5Compat.GraphicalEffects.
+- [Phase 03-core-config-ui-persistence]: [Phase 3]: CONF-01 BLOCKING gate satisfied — phase3_save_roundtrip proves Configuration::save() serialization (config::set+writeFile) round-trips device-block count + values with no loss; comment/formatting loss accepted. phase3_save_unknownkey proves schema-unknown keys drop without crash (T-3-00-02). Tests link ipcgull_static+config++, compile config.cpp directly on a temp cfg (no bus/polkit, never /etc).
+- [Phase 03-core-config-ui-persistence]: [Phase 3]: KeyNameMapper (BTN-02) maps Qt key/modifier->libevdev KEY_* (modifiers->LEFT*, letters/digits/F-keys algorithmic, table for rest); Escape+unknown->empty (T-3-00-03 no guessed token). Seven typed D-Bus proxies generated (qt_add 2->9) covering full Phase 3 config surface; ai out-arg needs QtTypeName.Out0=QList<int> annotation. Wave 1/2 are pure assembly.
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-30T20:41:27.738Z
-Stopped at: Completed 02-05-PLAN.md (human-verify documented)
+Last session: 2026-05-30T23:03:29.360Z
+Stopped at: Completed 03-00-PLAN.md (Wave-0 gate: CONF-01 round-trip GREEN)
 Resume file: None

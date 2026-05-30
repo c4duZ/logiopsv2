@@ -24,7 +24,7 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 ### Button Remapping
 
 - [ ] **BTN-01**: User can click a button on a visual device representation and reassign its action
-- [ ] **BTN-02**: User can assign a keystroke/shortcut to a button via a key-capture widget
+- [x] **BTN-02**: User can assign a keystroke/shortcut to a button via a key-capture widget
 - [ ] **BTN-03**: User can assign built-in actions to a button (DPI change/cycle, host switch, profile switch, SmartShift/hi-res toggles)
 - [ ] **BTN-04**: User can see at a glance what each button is currently bound to
 
@@ -76,7 +76,7 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 
 ### Config & Persistence
 
-- [ ] **CONF-01**: User can apply changes live and persist them without editing any text file
+- [x] **CONF-01**: User can apply changes live and persist them without editing any text file
 - [ ] **CONF-02**: User can restore a device to default settings
 - [x] **CONF-03**: GUI state stays in sync with the daemon's live state (signal-driven; no stale config), with the daemon as single source of truth
 
@@ -124,7 +124,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | DEV-04 | Phase 2 | Complete |
 | CONF-03 | Phase 2 | Complete |
 | BTN-01 | Phase 3 | Pending |
-| BTN-02 | Phase 3 | Pending |
+| BTN-02 | Phase 3 | Complete |
 | BTN-03 | Phase 3 | Pending |
 | BTN-04 | Phase 3 | Pending |
 | DPI-01 | Phase 3 | Pending |
@@ -135,7 +135,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | SCR-03 | Phase 3 | Pending |
 | HOST-01 | Phase 3 | Pending |
 | PROF-01 | Phase 3 | Pending |
-| CONF-01 | Phase 3 | Pending |
+| CONF-01 | Phase 3 | Complete |
 | CONF-02 | Phase 3 | Pending |
 | UI-01 | Phase 3 | Pending |
 | GEST-01 | Phase 4 | Pending |

@@ -80,7 +80,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User can create/name/switch manual profiles, apply changes live, and persist them via a polkit-gated save without editing `/etc/logid.cfg`
   5. User can restore a device to default settings, and the app presents a polished, tabbed Options+-style interface
 **Plans**: 5 plans
-  - [ ] 03-00-PLAN.md — Wave 0: BLOCKING save() round-trip + unknown-key CTest, KeyNameMapper, seven typed D-Bus proxies
+  - [x] 03-00-PLAN.md — Wave 0: BLOCKING save() round-trip + unknown-key CTest, KeyNameMapper, seven typed D-Bus proxies
   - [ ] 03-01-PLAN.md — DeviceController capability model + tabbed DetailPane shell + Theme tokens/glyphs (UI-01)
   - [ ] 03-02-PLAN.md — Buttons tab: device render + binding list + non-modal reassign panel + key-capture (BTN-01..04, HOST-01)
   - [ ] 03-03-PLAN.md — Pointer + Scroll tabs: DPI slider/cycle/labels + SmartShift/hires/thumbwheel (DPI-01..03, SCR-01..03)
