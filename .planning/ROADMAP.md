@@ -79,7 +79,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can toggle/tune SmartShift, toggle and invert hi-res scroll, and configure thumbwheel behavior on supported devices
   4. User can create/name/switch manual profiles, apply changes live, and persist them via a polkit-gated save without editing `/etc/logid.cfg`
   5. User can restore a device to default settings, and the app presents a polished, tabbed Options+-style interface
-**Plans**: TBD
+**Plans**: 5 plans
+  - [ ] 03-00-PLAN.md — Wave 0: BLOCKING save() round-trip + unknown-key CTest, KeyNameMapper, seven typed D-Bus proxies
+  - [ ] 03-01-PLAN.md — DeviceController capability model + tabbed DetailPane shell + Theme tokens/glyphs (UI-01)
+  - [ ] 03-02-PLAN.md — Buttons tab: device render + binding list + non-modal reassign panel + key-capture (BTN-01..04, HOST-01)
+  - [ ] 03-03-PLAN.md — Pointer + Scroll tabs: DPI slider/cycle/labels + SmartShift/hires/thumbwheel (DPI-01..03, SCR-01..03)
+  - [ ] 03-04-PLAN.md — Profiles tab + unsaved indicator + async polkit Save + restore-defaults (PROF-01, CONF-01, CONF-02)
 **UI hint**: yes
 **Research flag**: Verify `Configuration::save()` round-trip fidelity (libconfig comment/formatting preservation) before relying on it as the only persistence path.
 
@@ -163,7 +168,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|----------------|--------|-----------|
 | 1. Access Path & Daemon Hardening | 6/6 | Complete    | 2026-05-30 |
 | 2. D-Bus Client & Device List | 5/5 | Complete    | 2026-05-30 |
-| 3. Core Config UI & Persistence | 0/TBD | Not started | - |
+| 3. Core Config UI & Persistence | 0/5 | Not started | - |
 | 4. Fine-Grained Gesture Control | 0/TBD | Not started | - |
 | 5. Per-Application Profiles & Profile Sharing | 0/TBD | Not started | - |
 | 6. Action Wheel | 0/TBD | Not started | - |
