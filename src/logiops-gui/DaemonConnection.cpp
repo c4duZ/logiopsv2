@@ -68,6 +68,22 @@ DaemonConnection::DaemonConnection(DeviceModel* model, QObject* parent)
             this, &DaemonConnection::onDaemonUp);
     connect(_watcher, &QDBusServiceWatcher::serviceUnregistered,
             this, &DaemonConnection::onDaemonDown);
+    // WR-02: a fast restart (socket-activated, or two transitions within one
+    // dispatch) can coalesce into a single serviceOwnerChanged(old,new) where
+    // BOTH owners are non-empty — neither serviceRegistered nor
+    // serviceUnregistered fires, leaving the GUI bound to stale proxies talking
+    // to the dead owner. Treat a non-empty new owner as up (tear down + re-
+    // enumerate), an empty new owner as down. onDaemonUp already rebuilds from
+    // scratch, so this is idempotent with serviceRegistered (no double-subscribe).
+    connect(_watcher, &QDBusServiceWatcher::serviceOwnerChanged, this,
+            [this](const QString& name, const QString& oldOwner,
+                   const QString& newOwner) {
+                Q_UNUSED(oldOwner)
+                if (newOwner.isEmpty())
+                    onDaemonDown(name);
+                else
+                    onDaemonUp(name);
+            });
 
     // The .Devices manager proxy lives on the root node.
     _devices = new PizzaPixlLogiOpsDevicesInterface(kService, kRootPath, _bus, this);
