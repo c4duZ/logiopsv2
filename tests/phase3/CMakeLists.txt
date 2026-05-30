@@ -64,3 +64,22 @@ if(TARGET logiops-gui-lib AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/KeyNameMapperTe
         add_test(NAME phase3_keyname_mapper COMMAND phase3_keyname_mapper_test)
     endif()
 endif()
+
+# ---------------------------------------------------------------------------
+# DeviceController unit (GUI-side, QtTest) — Plan 01 (capability + DPI-bounds
+# spine). Driven via the construction seams with no live bus (Phase 2
+# DeviceModelTest precedent). Gated identically on the GUI lib existing.
+# ---------------------------------------------------------------------------
+if(TARGET logiops-gui-lib AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/DeviceControllerTest.cpp)
+    find_package(Qt6 6.4 COMPONENTS Test QUIET)
+    if(Qt6_FOUND)
+        set(CMAKE_AUTOMOC ON)
+        add_executable(phase3_device_controller_test DeviceControllerTest.cpp)
+        target_link_libraries(phase3_device_controller_test PRIVATE
+                logiops-gui-lib Qt6::Test)
+        set_target_properties(phase3_device_controller_test PROPERTIES
+                CXX_STANDARD 20
+                CXX_STANDARD_REQUIRED ON)
+        add_test(NAME phase3_device_controller COMMAND phase3_device_controller_test)
+    endif()
+endif()
