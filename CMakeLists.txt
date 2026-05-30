@@ -55,6 +55,20 @@ endif()
 add_subdirectory(src/ipcgull)
 add_subdirectory(src/logid)
 
+# Optional Qt 6 GUI client (logiops-gui). The daemon above does NOT depend on
+# Qt; the GUI is guarded so a host without Qt6 (or -DBUILD_GUI=OFF) still builds
+# the daemon and runs the test suite. find_package is QUIET (never REQUIRED) and
+# a missing Qt6 only WARNs — this is the load-bearing "GUI is optional" contract.
+option(BUILD_GUI "Build the Qt6 logiops-gui client" ON)
+if(BUILD_GUI)
+    find_package(Qt6 6.4 COMPONENTS Core Gui Qml Quick DBus Svg Test QUIET)
+    if(Qt6_FOUND)
+        add_subdirectory(src/logiops-gui)
+    else()
+        message(WARNING "Qt6 not found — skipping logiops-gui (daemon still builds)")
+    endif()
+endif()
+
 option(BUILD_TESTING "Build the logiops test suite" ON)
 if(BUILD_TESTING)
     enable_testing()
