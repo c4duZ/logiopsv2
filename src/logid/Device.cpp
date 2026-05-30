@@ -24,6 +24,7 @@
 #include <features/RemapButton.h>
 #include <features/HiresScroll.h>
 #include <features/DeviceStatus.h>
+#include <features/DeviceBattery.h>
 #include <features/ThumbWheel.h>
 #include <backend/hidpp20/features/Reset.h>
 #include <util/task.h>
@@ -104,7 +105,10 @@ Device::Device(std::string path, backend::hidpp::DeviceIndex index,
         _manager(manager),
         _nickname(manager),
         _ipc_node(manager->devicesNode()->make_child(_nickname)),
-        _awake(ipcgull::property_readable, true) {
+        _awake(ipcgull::property_readable, true),
+        _battery_percent(ipcgull::property_readable, 0),
+        _charging(ipcgull::property_readable, false),
+        _battery_known(ipcgull::property_readable, false) {
     _init();
 }
 
@@ -119,7 +123,10 @@ Device::Device(std::shared_ptr<backend::raw::RawDevice> raw_device,
         _manager(manager),
         _nickname(manager),
         _ipc_node(manager->devicesNode()->make_child(_nickname)),
-        _awake(ipcgull::property_readable, true) {
+        _awake(ipcgull::property_readable, true),
+        _battery_percent(ipcgull::property_readable, 0),
+        _charging(ipcgull::property_readable, false),
+        _battery_known(ipcgull::property_readable, false) {
     _init();
 }
 
@@ -134,7 +141,10 @@ Device::Device(Receiver* receiver, hidpp::DeviceIndex index,
         _manager(manager),
         _nickname(manager),
         _ipc_node(manager->devicesNode()->make_child(_nickname)),
-        _awake(ipcgull::property_readable, true) {
+        _awake(ipcgull::property_readable, true),
+        _battery_percent(ipcgull::property_readable, 0),
+        _charging(ipcgull::property_readable, false),
+        _battery_known(ipcgull::property_readable, false) {
     _init();
 }
 
@@ -155,6 +165,7 @@ void Device::_init() {
     _addFeature<features::HiresScroll>("hiresscroll");
     _addFeature<features::RemapButton>("remapbutton");
     _addFeature<features::DeviceStatus>("devicestatus");
+    _addFeature<features::DeviceBattery>("devicebattery");
     _addFeature<features::ThumbWheel>("thumbwheel");
 
     _makeResetMechanism();
@@ -194,6 +205,15 @@ void Device::wakeup() {
     }
 
     logPrintf(INFO, "%s:%d woke up.", _path.c_str(), _index);
+}
+
+void Device::setBattery(uint8_t percent, bool charging, bool known) {
+    std::lock_guard<std::mutex> lock(_state_lock);
+
+    _battery_percent = percent;
+    _charging = charging;
+    _battery_known = known;
+    _ipc_interface->notifyBattery();
 }
 
 void Device::reconfigure() {
@@ -327,15 +347,27 @@ Device::IPC::IPC(Device* device) :
                         {"ProductID",      ipcgull::property<uint16_t>(
                                 ipcgull::property_readable, device->pid())},
                         {"Active",         device->_awake},
+                        {"Battery",        device->_battery_percent},
+                        {"Charging",       device->_charging},
+                        {"BatteryKnown",   device->_battery_known},
                         {"DefaultProfile", device->_config.default_profile},
                         {"ActiveProfile", device->_profile_name}
                 }, {
-                        {"StatusChanged", ipcgull::signal::make_signal<bool>({"active"})}
+                        {"StatusChanged", ipcgull::signal::make_signal<bool>({"active"})},
+                        {"BatteryChanged", ipcgull::signal::make_signal<uint8_t, bool, bool>(
+                                {"percentage", "charging", "known"})}
                 }), _device(*device) {
 }
 
 void Device::IPC::notifyStatus() const {
     emit_signal("StatusChanged", (bool) (_device._awake));
+}
+
+void Device::IPC::notifyBattery() const {
+    emit_signal("BatteryChanged",
+                (uint8_t) (_device._battery_percent),
+                (bool) (_device._charging),
+                (bool) (_device._battery_known));
 }
 
 config::Device& Device::_getConfig(

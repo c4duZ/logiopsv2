@@ -96,6 +96,8 @@ namespace logid {
 
         void sleep();
 
+        void setBattery(uint8_t percent, bool charging, bool known);
+
         void reconfigure();
 
         void reset();
@@ -174,9 +176,14 @@ namespace logid {
             explicit IPC(Device* device);
 
             void notifyStatus() const;
+
+            void notifyBattery() const;
         };
 
         ipcgull::property<bool> _awake;
+        ipcgull::property<uint8_t> _battery_percent;
+        ipcgull::property<bool> _charging;
+        ipcgull::property<bool> _battery_known;
         std::mutex _state_lock;
 
         std::weak_ptr<Device> _self;
