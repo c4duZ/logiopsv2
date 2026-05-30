@@ -34,7 +34,7 @@ Rectangle {
         delegate: Item {
             readonly property bool current: index === pane.currentIndex
             readonly property string rName: model.name
-            readonly property string rModel: model.model
+            readonly property string rModel: model.modelName
             readonly property int rKind: model.deviceKind
             readonly property int rConn: model.connectionState
             readonly property bool rBattKnown: model.batteryKnown

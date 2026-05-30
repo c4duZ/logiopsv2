@@ -60,7 +60,10 @@ QHash<int, QByteArray> DeviceModel::roleNames() const {
     return {
         {PathRole, "path"},
         {NameRole, "name"},
-        {ModelRole, "model"},
+        // Exposed as "modelName", NOT "model": a delegate role literally named
+        // "model" collides with QML's built-in delegate `model` context object,
+        // which corrupts ALL `model.<role>` lookups (every role reads undefined).
+        {ModelRole, "modelName"},
         {DeviceKindRole, "deviceKind"},
         {BatteryPercentRole, "batteryPercent"},
         {BatteryKnownRole, "batteryKnown"},

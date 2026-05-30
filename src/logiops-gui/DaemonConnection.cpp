@@ -28,6 +28,7 @@
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
 #include <QDBusServiceWatcher>
+#include <QDBusVariant>
 #include <QGuiApplication>
 #include <QVariant>
 
@@ -41,6 +42,18 @@ namespace {
 // The daemon's root object path holds the .Devices manager interface.
 const QString kService = QStringLiteral(SERVICE_ROOT_NAME);
 const QString kRootPath = QStringLiteral("/pizza/pixl/logiops");
+
+// org.freedesktop.DBus.Properties.GetAll returns a{sv}; demarshalled into a
+// QVariantMap each value is a QVariant WRAPPING a QDBusVariant (the D-Bus 'v').
+// Calling .toString()/.toUInt()/.toBool() on the wrapper yields empty/0/false,
+// which silently blanked Name, ProductID (→ default Mouse icon) and battery.
+// Unwrap the inner variant before reading. Idempotent: a non-wrapped value is
+// returned as-is.
+QVariant dbusUnwrap(const QVariant& v) {
+    if (v.canConvert<QDBusVariant>())
+        return v.value<QDBusVariant>().variant();
+    return v;
+}
 } // namespace
 
 namespace {
@@ -219,10 +232,12 @@ void DaemonConnection::addDevice(const QDBusObjectPath& path) {
                     return; // removed before the reply landed.
 
                 const QVariantMap props = reply.value();
-                const QString name = props.value(QStringLiteral("Name")).toString();
+                const QString name = dbusUnwrap(props.value(QStringLiteral("Name"))).toString();
                 const quint16 pid =
-                    static_cast<quint16>(props.value(QStringLiteral("ProductID")).toUInt());
-                const bool active = props.value(QStringLiteral("Active"), true).toBool();
+                    static_cast<quint16>(dbusUnwrap(props.value(QStringLiteral("ProductID"))).toUInt());
+                const bool active = props.contains(QStringLiteral("Active"))
+                    ? dbusUnwrap(props.value(QStringLiteral("Active"))).toBool()
+                    : true;
 
                 if (_model)
                     _model->onDeviceAdded(key, name, pid, active);
@@ -233,15 +248,15 @@ void DaemonConnection::addDevice(const QDBusObjectPath& path) {
                 // "—" gracefully rather than a fake 0%. The 'y' uint8 arrives as
                 // an unsigned int in the variant map.
                 if (_model) {
-                    const QVariant battV = props.value(QStringLiteral("Battery"));
+                    const QVariant battV = dbusUnwrap(props.value(QStringLiteral("Battery")));
                     const bool hasBattery = battV.isValid() &&
                         props.contains(QStringLiteral("BatteryKnown"));
                     if (hasBattery) {
                         const int percent = static_cast<int>(battV.toUInt());
                         const bool charging =
-                            props.value(QStringLiteral("Charging")).toBool();
+                            dbusUnwrap(props.value(QStringLiteral("Charging"))).toBool();
                         const bool known =
-                            props.value(QStringLiteral("BatteryKnown")).toBool();
+                            dbusUnwrap(props.value(QStringLiteral("BatteryKnown"))).toBool();
                         _model->onBatteryChanged(key, percent, charging, known);
                     } else {
                         _model->onBatteryChanged(key, 0, false, false);

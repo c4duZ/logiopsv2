@@ -114,13 +114,13 @@ Item {
             }
             Text {
                 Layout.fillWidth: true
-                text: model.model
+                text: model.modelName
                 textFormat: Text.PlainText
                 color: Theme.mutedForeground
                 font.pixelSize: Theme.labelSize
                 font.weight: Theme.weightMedium
                 elide: Text.ElideRight
-                visible: model.model.length > 0 && model.model !== model.name
+                visible: model.modelName.length > 0 && model.modelName !== model.name
             }
         }
 
