@@ -9,5 +9,29 @@ Type=simple
 ExecStart=${CMAKE_INSTALL_PREFIX}/bin/logid
 User=root
 
+# --- Hardening (Phase 1) ---
+# Keep User=root: hidraw/uinput access needs it; a dedicated user is deferred.
+# Intentionally NOT sandboxing /dev (no private-devices mount, no DeviceAllow=,
+# no DevicePolicy=closed): those would hide /dev/hidraw* and /dev/uinput and
+# break the daemon's purpose.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+# ProtectSystem=strict mounts /etc read-only; re-open the single config path so
+# Configuration::save() can still write it (without this, save() fails EROFS).
+ReadWritePaths=/etc/logid.cfg
+# AF_UNIX = D-Bus system bus; AF_NETLINK = udev hotplug monitor. Nothing else.
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+# Empty = drop ALL capabilities from the bounding set.
+CapabilityBoundingSet=
+ProtectControlGroups=yes
+ProtectKernelTunables=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+
 [Install]
 WantedBy=graphical.target
