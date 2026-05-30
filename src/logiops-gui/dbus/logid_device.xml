@@ -10,17 +10,28 @@
     (b, true=awake/false=sleeping, DEV-03) and the StatusChanged(b) signal exist
     in the daemon today.
 
-    NOTE: the daemon's Battery/Charging/BatteryKnown properties + BatteryChanged
-    signal (added in Plan 02) are intentionally NOT included in this XML yet.
-    Plan 05 adds them here once it wires the DeviceModel battery slot to the live
-    signal; this plan keeps the proxy/model battery surface unwired-but-present.
+    Battery (y/uint8 percentage RO, DEV-02), Charging (b RO), BatteryKnown
+    (b RO) and the BatteryChanged(percentage y, charging b, known b) signal
+    were added to the daemon by Plan 02 (HID++ 0x1004 UnifiedBattery preferred,
+    0x1000 BatteryStatus fallback; both feed Device::setBattery). Plan 05 adds
+    them here and wires DaemonConnection -> DeviceModel.onBatteryChanged so the
+    battery block is live + signal-driven (no polling, CONF-03). Names/types
+    verified against src/logid/Device.cpp (the .Device IPC property/signal map).
   -->
   <interface name="pizza.pixl.LogiOps.Device">
     <property name="Name" type="s" access="read"/>
     <property name="ProductID" type="q" access="read"/>
     <property name="Active" type="b" access="read"/>
+    <property name="Battery" type="y" access="read"/>
+    <property name="Charging" type="b" access="read"/>
+    <property name="BatteryKnown" type="b" access="read"/>
     <signal name="StatusChanged">
       <arg name="active" type="b"/>
+    </signal>
+    <signal name="BatteryChanged">
+      <arg name="percentage" type="y"/>
+      <arg name="charging" type="b"/>
+      <arg name="known" type="b"/>
     </signal>
   </interface>
 </node>

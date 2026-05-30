@@ -142,6 +142,17 @@ void DaemonConnection::addDevice(const QDBusObjectPath& path) {
                     _model->onStatusChanged(key, active);
             });
 
+    // Live battery -> model (CONF-03: signal-driven, no polling). The daemon's
+    // BatteryChanged(percentage y, charging b, known b) maps to a uchar first
+    // arg in the generated proxy; clamp 0..100 in the delegate (T-02-15). This
+    // is the LIVE no-poll path; the initial value is read below via GetAll.
+    connect(dev, &PizzaPixlLogiOpsDeviceInterface::BatteryChanged, this,
+            [this, key](uchar percentage, bool charging, bool known) {
+                if (_model)
+                    _model->onBatteryChanged(key, static_cast<int>(percentage),
+                                             charging, known);
+            });
+
     // Async-read Name / ProductID / Active via Properties.GetAll so a sleeping
     // device never blocks the UI thread (Pitfall 4). The generated property
     // accessors are synchronous, so go through the standard Properties iface.
@@ -161,8 +172,11 @@ void DaemonConnection::addDevice(const QDBusObjectPath& path) {
                     // A property read failed (device vanished mid-enumerate, or
                     // policy edge): still register the row with best-effort empty
                     // values so it is not silently dropped — the model owns truth.
-                    if (_model && _deviceProxies.contains(key))
+                    if (_model && _deviceProxies.contains(key)) {
                         _model->onDeviceAdded(key, QString(), 0, true);
+                        // No battery info available -> "—" (known=false).
+                        _model->onBatteryChanged(key, 0, false, false);
+                    }
                     recomputePopulation();
                     return;
                 }
@@ -177,6 +191,27 @@ void DaemonConnection::addDevice(const QDBusObjectPath& path) {
 
                 if (_model)
                     _model->onDeviceAdded(key, name, pid, active);
+
+                // Initial battery value from the same GetAll snapshot (no extra
+                // round-trip). An older daemon / unsupported device omits the
+                // Battery property entirely -> known stays false -> the row shows
+                // "—" gracefully rather than a fake 0%. The 'y' uint8 arrives as
+                // an unsigned int in the variant map.
+                if (_model) {
+                    const QVariant battV = props.value(QStringLiteral("Battery"));
+                    const bool hasBattery = battV.isValid() &&
+                        props.contains(QStringLiteral("BatteryKnown"));
+                    if (hasBattery) {
+                        const int percent = static_cast<int>(battV.toUInt());
+                        const bool charging =
+                            props.value(QStringLiteral("Charging")).toBool();
+                        const bool known =
+                            props.value(QStringLiteral("BatteryKnown")).toBool();
+                        _model->onBatteryChanged(key, percent, charging, known);
+                    } else {
+                        _model->onBatteryChanged(key, 0, false, false);
+                    }
+                }
                 recomputePopulation();
             });
 }
