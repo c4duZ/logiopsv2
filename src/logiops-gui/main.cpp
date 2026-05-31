@@ -82,6 +82,9 @@ int main(int argc, char* argv[]) {
 #else
     logiops_gui::ConfigState configState(QDBusConnection::systemBus());
 #endif
+    // CONF-01 (WR-03): hand the dirty-tracker to the factory so every per-device
+    // controller/model marks unsaved changes on a live-apply (the pill appears).
+    controllerFactory.setConfigState(&configState);
     // BTN-02 key-capture -> evdev names bridge (static mapper exposed to QML).
     KeyNameBridge keyNames;
 

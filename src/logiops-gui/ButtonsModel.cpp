@@ -26,6 +26,7 @@
 #include <QDBusReply>
 #include <QRegularExpression>
 
+#include "ConfigState.h"
 #include "logid_button_proxy.h"
 #include "logid_buttons_proxy.h"
 
@@ -233,6 +234,10 @@ void ButtonsModel::applyCurrentAction(int row, const QString& type,
     _rows[row].currentActionSummary = summary.isEmpty() ? defaultSummary(type) : summary;
     const QModelIndex idx = index(row);
     emit dataChanged(idx, idx, {CurrentActionTypeRole, CurrentActionSummaryRole});
+    // CONF-01 (WR-03): every reassign funnels through here, so mark the global
+    // config dirty once the optimistic row update lands. No-op if unwired.
+    if (_configState != nullptr)
+        _configState->markDirty();
 }
 
 // ---------------------------------------------------------------------------

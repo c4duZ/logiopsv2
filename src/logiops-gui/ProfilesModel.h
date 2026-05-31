@@ -28,6 +28,8 @@
 
 namespace logiops_gui {
 
+class ConfigState;
+
 /*
  * ProfilesModel — the C++<->QML bridge for the Profiles tab (PROF-01).
  *
@@ -100,6 +102,11 @@ public:
                       const QString& def);
     [[nodiscard]] const QStringList& profiles() const { return _names; }
 
+    // CONF-01 (WR-03): inject the global dirty-tracker. Profile create/switch/
+    // remove/rename mark it dirty so the "Unsaved changes" pill appears. Null in
+    // the test path (markDirty is then a no-op).
+    void setConfigState(ConfigState* configState) { _configState = configState; }
+
 signals:
     void activeProfileChanged();
 
@@ -109,6 +116,14 @@ protected:
     // re-seeding. Kept separate so ordering/args are assertable with no bus.
     virtual void performSetProfile(const QString& name);
     virtual void performRemoveProfile(const QString& name);
+    // Rename = create-new + switch, then drop-old. The two daemon writes MUST be
+    // SEQUENCED: the old profile is removed ONLY after the create/switch reply
+    // confirms the new name exists, otherwise a failed create followed by an
+    // unconditional remove deletes the old profile with no replacement (WR-05 —
+    // net profile loss). The live override chains RemoveProfile inside the
+    // SetProfile reply; the test subclass records the SetProfile/RemoveProfile
+    // dispatch order with no bus.
+    virtual void performRenameProfile(const QString& oldName, const QString& newName);
 
     // Optimistically set the active profile + emit changed (so the active pill
     // moves immediately, live-apply model).
@@ -123,9 +138,15 @@ private:
     // reflects the daemon's post-mutation truth.
     void refresh();
 
+    // Mark the global config dirty after a profile mutation (no-op if unset).
+    void markDirty() const;
+
     QString _devicePath;
     QDBusConnection _bus;
     bool _live = false;
+
+    // CONF-01 dirty-tracker (WR-03). Not owned; may be null (test path).
+    ConfigState* _configState = nullptr;
 };
 
 } // namespace logiops_gui

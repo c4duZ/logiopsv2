@@ -22,6 +22,7 @@
 #include <QDBusPendingReply>
 #include <QDBusVariant>
 
+#include "ConfigState.h"
 #include "logid_device_proxy.h"
 
 namespace logiops_gui {
@@ -93,6 +94,12 @@ void ProfilesModel::setActive(const QString& name) {
 // absent + switches); rename is create-new + switch + drop-old (no daemon rename).
 // ---------------------------------------------------------------------------
 
+void ProfilesModel::markDirty() const {
+    // CONF-01 (WR-03): a profile mutation is an applied-but-unsaved change.
+    if (_configState != nullptr)
+        _configState->markDirty();
+}
+
 void ProfilesModel::createProfile(const QString& name) {
     if (name.isEmpty())
         return;
@@ -104,6 +111,7 @@ void ProfilesModel::createProfile(const QString& name) {
     }
     setActive(name);
     performSetProfile(name);
+    markDirty();
 }
 
 void ProfilesModel::switchProfile(const QString& name) {
@@ -111,6 +119,7 @@ void ProfilesModel::switchProfile(const QString& name) {
         return;
     setActive(name);
     performSetProfile(name);
+    markDirty();
 }
 
 void ProfilesModel::removeProfile(const QString& name) {
@@ -130,6 +139,7 @@ void ProfilesModel::removeProfile(const QString& name) {
         setActive(next);
         performSetProfile(next);
     }
+    markDirty();
 }
 
 void ProfilesModel::renameProfile(const QString& oldName, const QString& newName) {
@@ -144,8 +154,11 @@ void ProfilesModel::renameProfile(const QString& oldName, const QString& newName
     const bool wasActive = (_active == oldName);
     if (wasActive)
         setActive(newName);
-    performSetProfile(newName);     // create + switch to the new name
-    performRemoveProfile(oldName);  // drop the old name
+    // SEQUENCED create-then-remove (WR-05): the live override only fires
+    // RemoveProfile(oldName) after SetProfile(newName) succeeds, so a failed
+    // create can never leave the device with neither the old nor the new profile.
+    performRenameProfile(oldName, newName);
+    markDirty();
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +188,50 @@ void ProfilesModel::performRemoveProfile(const QString& name) {
                 watcher->deleteLater();
                 dev->deleteLater();
                 refresh();
+            });
+}
+
+void ProfilesModel::performRenameProfile(const QString& oldName, const QString& newName) {
+    if (!_live) {
+        // No-bus default (tests override this). Keep the dispatch ORDER observable
+        // for the recording subclass: create/switch first, then drop the old name.
+        performSetProfile(newName);
+        performRemoveProfile(oldName);
+        return;
+    }
+    // SEQUENCED (WR-05): SetProfile(newName) first; only on a non-error reply that
+    // confirms newName now exists do we RemoveProfile(oldName). A failed create
+    // therefore never triggers the remove, so the old profile is preserved.
+    auto* dev = new PizzaPixlLogiOpsDeviceInterface(kService, _devicePath, _bus, this);
+    auto* w = new QDBusPendingCallWatcher(dev->SetProfile(newName), this);
+    connect(w, &QDBusPendingCallWatcher::finished, this,
+            [this, dev, oldName, newName](QDBusPendingCallWatcher* watcher) {
+                QDBusPendingReply<> r = *watcher;
+                watcher->deleteLater();
+                const bool created = !r.isError();
+                // Re-read GetProfiles to confirm the new name landed before any
+                // destructive remove.
+                auto* gw = new QDBusPendingCallWatcher(dev->GetProfiles(), this);
+                connect(gw, &QDBusPendingCallWatcher::finished, this,
+                        [this, dev, oldName, newName, created]
+                        (QDBusPendingCallWatcher* gwatcher) {
+                            QDBusPendingReply<QStringList> gr = *gwatcher;
+                            gwatcher->deleteLater();
+                            bool newExists = false;
+                            if (!gr.isError()) {
+                                const QStringList names = gr.value();
+                                newExists = names.contains(newName);
+                                const QString active = dev->activeProfile();
+                                const QString def = dev->defaultProfile();
+                                seedProfiles(names, active, def);
+                            }
+                            dev->deleteLater();
+                            // Only drop the old profile when the new one is
+                            // confirmed present (WR-05): never delete oldName if
+                            // the create failed or newName is absent.
+                            if (created && newExists)
+                                performRemoveProfile(oldName);
+                        });
             });
 }
 

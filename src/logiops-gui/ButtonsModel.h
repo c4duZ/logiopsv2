@@ -29,6 +29,8 @@
 
 namespace logiops_gui {
 
+class ConfigState;
+
 /*
  * ButtonsModel — the C++<->QML bridge for the Buttons tab (BTN-01..04, HOST-01).
  *
@@ -129,6 +131,10 @@ public:
     void seedButtons(const QVector<ButtonInfo>& buttons);
     [[nodiscard]] const QVector<ButtonInfo>& rows() const { return _rows; }
 
+    // CONF-01 (WR-03): inject the global dirty-tracker. Every successful reassign
+    // marks it dirty so the "Unsaved changes" pill appears. Null in the test path.
+    void setConfigState(ConfigState* configState) { _configState = configState; }
+
 signals:
     void hostCountChanged();
     // Emitted when a host string is rejected by setChangeHost validation (so the
@@ -159,6 +165,9 @@ private:
     QString _devicePath;
     QDBusConnection _bus;
     bool _live = false;
+
+    // CONF-01 dirty-tracker (WR-03). Not owned; may be null (test path).
+    ConfigState* _configState = nullptr;
 };
 
 } // namespace logiops_gui

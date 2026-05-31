@@ -32,6 +32,8 @@
 
 namespace logiops_gui {
 
+class ConfigState;
+
 /*
  * DeviceControllerFactory — owns the single "currently selected device"
  * DeviceController and swaps it when the sidebar selection changes.
@@ -61,6 +63,11 @@ public:
     explicit DeviceControllerFactory(QObject* parent = nullptr);
     ~DeviceControllerFactory() override;
 
+    // CONF-01 (WR-03): the global dirty-tracker injected into each per-device
+    // controller/model so config-mutating setters flip the "Unsaved changes" pill.
+    // Set once at startup before any device is selected.
+    void setConfigState(ConfigState* configState) { _configState = configState; }
+
     [[nodiscard]] DeviceController* controller() const { return _controller; }
     [[nodiscard]] ButtonsModel* buttonsModel() const { return _buttonsModel; }
     [[nodiscard]] ProfilesModel* profilesModel() const { return _profilesModel; }
@@ -78,6 +85,8 @@ private:
     ButtonsModel* _buttonsModel = nullptr;
     ProfilesModel* _profilesModel = nullptr;
     QString _currentPath;
+    // CONF-01 dirty-tracker (WR-03), injected into each per-device object. Not owned.
+    ConfigState* _configState = nullptr;
 };
 
 } // namespace logiops_gui

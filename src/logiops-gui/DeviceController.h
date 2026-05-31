@@ -35,6 +35,8 @@ class PizzaPixlLogiOpsButtonsInterface;
 
 namespace logiops_gui {
 
+class ConfigState;
+
 /*
  * DeviceController — the per-device C++<->QML bridge for the Phase 3 config UI.
  *
@@ -180,6 +182,12 @@ public:
     void seedThumb(bool divert, bool invert);
     void setHostCount(int count);
 
+    // CONF-01: the global dirty-tracker. Injected by the factory after
+    // construction; every config-mutating setter calls markDirty() on it after a
+    // successful optimistic live-apply so the "Unsaved changes" pill appears. Null
+    // in the headless/test path (markDirty is then a no-op). WR-03.
+    void setConfigState(ConfigState* configState) { _configState = configState; }
+
 signals:
     void capabilitiesChanged();
     void dpiChanged();
@@ -245,6 +253,11 @@ private:
     bool _hiresInvert = false;
     bool _thumbDivert = false;
     bool _thumbInvert = false;
+
+    // CONF-01 dirty-tracker (WR-03). Not owned; may be null (test/headless path).
+    ConfigState* _configState = nullptr;
+    // Mark the global config dirty after a successful live-apply (no-op if unset).
+    void markDirty() const;
 };
 
 } // namespace logiops_gui

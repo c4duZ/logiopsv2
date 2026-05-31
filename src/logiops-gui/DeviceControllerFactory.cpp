@@ -64,6 +64,11 @@ void DeviceControllerFactory::selectDevice(const QString& devicePath) {
         _controller = new DeviceController(devicePath, _bus, this);
         _buttonsModel = new ButtonsModel(devicePath, _bus, this);
         _profilesModel = new ProfilesModel(devicePath, _bus, this);
+        // CONF-01 (WR-03): wire the dirty-tracker into every per-device object so
+        // each tab's setters flip the "Unsaved changes" pill on a live-apply.
+        _controller->setConfigState(_configState);
+        _buttonsModel->setConfigState(_configState);
+        _profilesModel->setConfigState(_configState);
         // HOST-01: drive the Buttons model's host-slot count from the device
         // (the controller's hostCount, wired from the daemon's ChangeHost
         // GetHostCount). Seed now and keep it synced as capabilities resolve.

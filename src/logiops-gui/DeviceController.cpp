@@ -18,6 +18,7 @@
  */
 #include "DeviceController.h"
 
+#include "ConfigState.h"
 #include "ipc_defs.h"
 #include "logid_dpi_proxy.h"
 #include "logid_smartshift_proxy.h"
@@ -239,6 +240,13 @@ void DeviceController::setHostCount(int count) {
     emit capabilitiesChanged();
 }
 
+void DeviceController::markDirty() const {
+    // CONF-01 (WR-03): flag unsaved changes after a live-apply. No-op when the
+    // dirty-tracker is not wired (headless/test path).
+    if (_configState != nullptr)
+        _configState->markDirty();
+}
+
 // --- Optimistic setters: emit the change at once, then fire the async setter. ---
 
 void DeviceController::setDpi(int dpi) {
@@ -246,6 +254,7 @@ void DeviceController::setDpi(int dpi) {
         _dpi = dpi;
         emit dpiChanged();
     }
+    markDirty();
     // No GUI-side rounding: hand the raw value to the daemon, which snaps via
     // getClosestDPI (DPI.cpp). We DO re-read GetDPI to reflect the snapped value.
     if (_dpiProxy != nullptr) {
@@ -299,6 +308,7 @@ void DeviceController::rebuildPresetModel() {
 void DeviceController::syncPresets() {
     rebuildPresetModel();
     emit dpiPresetsChanged();
+    markDirty(); // preset add/remove/relabel/setValue all funnel here (WR-03).
     // Push the FULL {values,labels} list to the daemon (.DPI.SetPresets) — the
     // actual device-scoped persistence path (option-a), NOT a per-button action.
     QList<uint> values;
@@ -354,6 +364,7 @@ void DeviceController::setSmartShiftActive(bool active) {
     }
     if (_smartShiftProxy != nullptr)
         _smartShiftProxy->SetActive(active, false);
+    markDirty();
 }
 
 void DeviceController::setSmartShiftThreshold(int threshold) {
@@ -363,6 +374,7 @@ void DeviceController::setSmartShiftThreshold(int threshold) {
     }
     if (_smartShiftProxy != nullptr)
         _smartShiftProxy->SetThreshold(static_cast<uchar>(threshold), false);
+    markDirty();
 }
 
 void DeviceController::setSmartShiftTorque(int torque) {
@@ -372,6 +384,7 @@ void DeviceController::setSmartShiftTorque(int torque) {
     }
     if (_smartShiftProxy != nullptr)
         _smartShiftProxy->SetTorque(static_cast<uchar>(torque), false);
+    markDirty();
 }
 
 void DeviceController::setHiresOn(bool on) {
@@ -381,6 +394,7 @@ void DeviceController::setHiresOn(bool on) {
     }
     if (_hiresProxy != nullptr)
         _hiresProxy->SetHires(on);
+    markDirty();
 }
 
 void DeviceController::setHiresInvert(bool invert) {
@@ -390,6 +404,7 @@ void DeviceController::setHiresInvert(bool invert) {
     }
     if (_hiresProxy != nullptr)
         _hiresProxy->SetInvert(invert);
+    markDirty();
 }
 
 void DeviceController::setThumbDivert(bool divert) {
@@ -399,6 +414,7 @@ void DeviceController::setThumbDivert(bool divert) {
     }
     if (_thumbProxy != nullptr)
         _thumbProxy->SetDivert(divert);
+    markDirty();
 }
 
 void DeviceController::setThumbInvert(bool invert) {
@@ -408,6 +424,7 @@ void DeviceController::setThumbInvert(bool invert) {
     }
     if (_thumbProxy != nullptr)
         _thumbProxy->SetInvert(invert);
+    markDirty();
 }
 
 void DeviceController::setThumbTap(const QString& type) {
@@ -415,6 +432,7 @@ void DeviceController::setThumbTap(const QString& type) {
     // SetTap builds the handler via makeAction at .../thumb_wheel/tap.
     if (_thumbProxy != nullptr)
         _thumbProxy->SetTap(type);
+    markDirty();
 }
 
 } // namespace logiops_gui

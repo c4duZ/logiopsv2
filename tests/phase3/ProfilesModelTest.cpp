@@ -280,6 +280,64 @@ private slots:
         s.restoreDefaults(QStringLiteral("default"));
         QCOMPARE(s.clearCalls.size(), 0);
     }
+
+    // ----- WR-03: CONF-01 dirty-wiring (a profile mutation flips the pill) -----
+
+    // A profile setter on a ConfigState-wired model marks the global config dirty,
+    // and a successful Save clears it (the "Unsaved changes" pill lifecycle).
+    void test_profile_mutation_marks_dirty() {
+        RecordingConfigState s;
+        QVERIFY(!s.dirty());
+
+        RecordingProfilesModel m;
+        m.setConfigState(&s);
+        m.seedProfiles(QStringList{QStringLiteral("default")},
+                       QStringLiteral("default"), QStringLiteral("default"));
+
+        // create -> dirty.
+        m.createProfile(QStringLiteral("Work"));
+        QVERIFY(s.dirty());
+
+        // A successful save clears it.
+        s.save();
+        s.onSaveReplied(false, QString(), QString());
+        QVERIFY(!s.dirty());
+
+        // switch -> dirty again.
+        m.switchProfile(QStringLiteral("default"));
+        QVERIFY(s.dirty());
+    }
+
+    // An unwired model (no ConfigState injected) never touches dirty — the test/
+    // headless path stays a no-op (markDirty guards on the null pointer).
+    void test_profile_mutation_no_configstate_is_noop() {
+        RecordingProfilesModel m;
+        m.seedProfiles(QStringList{QStringLiteral("default")},
+                       QStringLiteral("default"), QStringLiteral("default"));
+        // No setConfigState() — must not crash.
+        m.createProfile(QStringLiteral("Work"));
+        QCOMPARE(m.rowCount(), 2);
+    }
+
+    // ----- WR-05: rename dispatch ORDER (SetProfile(new) before RemoveProfile(old)) -----
+
+    // Even routed through performRenameProfile, the no-bus default preserves the
+    // create-then-remove order the recording subclass observes (the live override
+    // additionally SEQUENCES the remove behind the create's confirmed reply).
+    void test_rename_sequences_create_before_remove() {
+        RecordingProfilesModel m;
+        m.seedProfiles(QStringList{QStringLiteral("default"), QStringLiteral("Gaming")},
+                       QStringLiteral("Gaming"), QStringLiteral("default"));
+        m.calls.clear();
+
+        m.renameProfile(QStringLiteral("Gaming"), QStringLiteral("Esports"));
+        QCOMPARE(m.calls.size(), 2);
+        // SetProfile(new) MUST come first; RemoveProfile(old) only after.
+        QCOMPARE(m.calls.at(0).method, QStringLiteral("SetProfile"));
+        QCOMPARE(m.calls.at(0).arg, QStringLiteral("Esports"));
+        QCOMPARE(m.calls.at(1).method, QStringLiteral("RemoveProfile"));
+        QCOMPARE(m.calls.at(1).arg, QStringLiteral("Gaming"));
+    }
 };
 
 QTEST_MAIN(ProfilesModelTest)
