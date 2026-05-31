@@ -61,6 +61,13 @@ Rectangle {
     // Local mode for the inline editors (which category is expanded).
     property string expanded: ""
 
+    // GEST-01 "→ action" leg: when the gesture builder asks to choose what a
+    // direction does, we reuse the Keystroke capture but must route the result to
+    // the GESTURE DIRECTION (gestureModel.setGestureKeypress), not the whole button
+    // (buttonsModel.setKeypress). This holds the direction the capture is scoped to
+    // while in gesture-action mode; empty string means "normal button reassignment".
+    property string activeGestureDirection: ""
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: Theme.spacingLg
@@ -111,14 +118,32 @@ Rectangle {
                     label: qsTr("Keystroke")
                     glyph: "qrc:/logiops/gui/icons/keystroke.svg"
                     active: root.currentType === "Keypress"
-                    onChosen: root.expanded = (root.expanded === "Keypress" ? "" : "Keypress")
+                    onChosen: {
+                        // Opening the Keystroke category directly is a BUTTON
+                        // reassignment, so clear any gesture-action scoping.
+                        root.activeGestureDirection = "";
+                        root.expanded = (root.expanded === "Keypress" ? "" : "Keypress");
+                    }
                 }
                 KeyCaptureField {
                     Layout.fillWidth: true
                     visible: root.expanded === "Keypress"
                     onKeysCaptured: function (names) {
-                        if (root.buttonsModel && names.length > 0)
+                        if (names.length === 0)
+                            return;
+                        // GEST-01: when the capture was opened for a gesture
+                        // direction, bind the keystroke to THAT gesture direction
+                        // (not the whole button). Otherwise keep normal button
+                        // keystroke reassignment intact.
+                        if (root.activeGestureDirection.length > 0) {
+                            if (root.gestureModel)
+                                root.gestureModel.setGestureKeypress(
+                                    root.activeGestureDirection, names);
+                            root.activeGestureDirection = "";
+                            root.expanded = "Gesture";
+                        } else if (root.buttonsModel) {
                             root.buttonsModel.setKeypress(root.row, names);
+                        }
                     }
                 }
 
@@ -256,6 +281,10 @@ Rectangle {
                     // Keystroke category scoped to "the action this direction fires".
                     // The chosen keystroke is forwarded to the gesture model.
                     onChooseActionRequested: function (direction) {
+                        // Scope the shared Keystroke capture to THIS gesture
+                        // direction so onKeysCaptured routes to setGestureKeypress
+                        // (the gesture leg) instead of setKeypress (the button).
+                        root.activeGestureDirection = direction;
                         root.expanded = "Keypress";
                     }
                 }

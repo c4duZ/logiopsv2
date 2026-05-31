@@ -132,6 +132,69 @@ private slots:
         QCOMPARE(baddir.calls.size(), 0);
     }
 
+    // (4) GESTURE KEYSTROKE TWO-STEP (GEST-01 "→ action" leg): binding a keystroke
+    // to a gesture DIRECTION records SetAction("Keypress") on the gesture mode
+    // FIRST, then SetKeys with the captured evdev names SECOND — proving the
+    // gesture (mode/type carried through), not the whole button, is targeted. The
+    // SetKeys hop is what ButtonsModel::setKeypress does for a button, but routed
+    // through the gesture node here.
+    void test_gesture_keypress_two_step_order() {
+        RecordingGestureModel m;
+        // A discrete mode must be set first (SetAction only exists on OnInterval /
+        // OnRelease); this records the SetGesture mode switch.
+        QVERIFY(m.setMode(QStringLiteral("up"),
+                          QStringLiteral("Do once when moved far enough")));
+        const int base = m.calls.size();
+
+        const QStringList keys{QStringLiteral("KEY_LEFTCTRL"), QStringLiteral("KEY_C")};
+        QVERIFY(m.setGestureKeypress(QStringLiteral("up"), keys));
+
+        // Exactly two new dispatches, in order: SetAction("Keypress") then SetKeys.
+        QCOMPARE(m.calls.size(), base + 2);
+
+        const auto& setAction = m.calls.at(base);
+        QCOMPARE(setAction.kind, QStringLiteral("SetAction"));
+        QCOMPARE(setAction.direction, QStringLiteral("up"));
+        QCOMPARE(setAction.type, QStringLiteral("OnRelease")); // the gesture mode
+        QCOMPARE(setAction.args.size(), 1);
+        QCOMPARE(setAction.args.at(0).toString(), QStringLiteral("Keypress"));
+
+        const auto& setKeys = m.calls.at(base + 1);
+        QCOMPARE(setKeys.kind, QStringLiteral("SetKeys"));
+        QCOMPARE(setKeys.direction, QStringLiteral("up"));
+        // The mode/type is carried through so the live path lands on the gesture
+        // node (.../gestures/up), not the button.
+        QCOMPARE(setKeys.type, QStringLiteral("OnRelease"));
+        QCOMPARE(setKeys.args.size(), 1);
+        QCOMPARE(setKeys.args.at(0).toStringList(), keys);
+    }
+
+    // (5) GESTURE KEYSTROKE GUARDS: validate-before-dispatch — an empty key list,
+    // an invalid direction, or a mode with no action records ZERO dispatch.
+    void test_gesture_keypress_guards() {
+        // Empty keys on a valid discrete mode -> rejected, no SetAction/SetKeys.
+        RecordingGestureModel empty;
+        QVERIFY(empty.setMode(QStringLiteral("up"), QStringLiteral("Repeat while moving")));
+        const int base = empty.calls.size();
+        QCOMPARE(empty.setGestureKeypress(QStringLiteral("up"), QStringList{}), false);
+        QCOMPARE(empty.calls.size(), base);
+
+        // Invalid direction -> rejected, zero dispatch.
+        RecordingGestureModel baddir;
+        QCOMPARE(baddir.setGestureKeypress(QStringLiteral("diagonal"),
+                                           QStringList{QStringLiteral("KEY_A")}), false);
+        QCOMPARE(baddir.calls.size(), 0);
+
+        // A mode with no action (Axis) -> rejected, zero dispatch beyond the mode set.
+        RecordingGestureModel noaction;
+        QVERIFY(noaction.setMode(QStringLiteral("up"),
+                                 QStringLiteral("Adjust proportionally")));
+        const int axisBase = noaction.calls.size();
+        QCOMPARE(noaction.setGestureKeypress(QStringLiteral("up"),
+                                             QStringList{QStringLiteral("KEY_A")}), false);
+        QCOMPARE(noaction.calls.size(), axisBase);
+    }
+
     // (3) PREVIEW SENTENCE (GEST-04): previewSentence recomposes per the UI-SPEC
     // copywriting templates and previewChanged NOTIFY fires on change.
     void test_preview_sentence() {

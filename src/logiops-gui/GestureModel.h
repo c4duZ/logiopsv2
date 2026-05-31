@@ -100,6 +100,17 @@ public:
     // chosen action so the preview can name it; dispatches SetAction. ---
     Q_INVOKABLE bool setGestureAction(const QString& direction, const QString& actionType);
 
+    // --- Bind a Keystroke as the discrete-mode gesture action (GEST-01 "→ action"
+    // leg). Two-step, mirroring ButtonsModel::setKeypress but TARGETING THE GESTURE
+    // DIRECTION, not the whole button: step 1 SetAction("Keypress") on the gesture's
+    // Gesture.<mode> interface; step 2 SetKeys(evdevNames) on the
+    // pizza.pixl.LogiOps.Action.Keypress interface AT THE GESTURE NODE
+    // (.../gestures/<direction>), sequenced strictly AFTER step 1's reply. Only
+    // valid on the action-bearing modes (OnInterval / OnRelease). Validates the
+    // direction and rejects an empty key list BEFORE any dispatch. ---
+    Q_INVOKABLE bool setGestureKeypress(const QString& direction,
+                                        const QStringList& evdevNames);
+
     // --- Active-direction selector (drives the preview/readout). ---
     [[nodiscard]] QString activeDirection() const { return _active; }
     void setActiveDirection(const QString& direction);

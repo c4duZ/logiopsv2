@@ -297,6 +297,55 @@ bool GestureModel::setGestureAction(const QString& direction, const QString& act
     return true;
 }
 
+// ---------------------------------------------------------------------------
+// setGestureKeypress — the GEST-01 "→ action" leg for a Keystroke, two-step and
+// scoped to the gesture DIRECTION (not the whole button). Validate-before-
+// dispatch: reject an invalid direction, a mode that has no action, or an empty
+// key list before touching the bus. Then mirror ButtonsModel::setKeypress's
+// ordering onto the gesture node:
+//   step 1: SetAction("Keypress") on the Gesture.<mode> interface (so the daemon
+//           builds the Keypress action child at the gesture node);
+//   step 2: SetKeys(evdevNames) on Action.Keypress AT THE GESTURE NODE, sequenced
+//           strictly AFTER step 1 by the live performParamCall (which detects
+//           SetKeys and chains it behind the in-flight SetAction/SetGesture and the
+//           ordered connection). Both hops funnel through performParamCall so the
+//           recording-subclass test can assert the order with no live bus.
+// ---------------------------------------------------------------------------
+bool GestureModel::setGestureKeypress(const QString& direction,
+                                      const QStringList& evdevNames) {
+    if (!validDirection(direction)) {
+        emit editRejected(direction, QStringLiteral("invalid direction"));
+        return false;
+    }
+    DirectionState& st = stateFor(direction);
+    // SetAction/Keypress only exist on the discrete modes (OnInterval / OnRelease).
+    if (st.mode != QLatin1String("OnInterval") && st.mode != QLatin1String("OnRelease")) {
+        emit editRejected(direction, QStringLiteral("mode has no action"));
+        return false;
+    }
+    if (evdevNames.isEmpty()) {
+        emit editRejected(direction, QStringLiteral("empty keys"));
+        return false;
+    }
+
+    // Step 1: SetAction("Keypress") on the gesture's Gesture.<mode> interface.
+    performParamCall(direction, st.mode, QStringLiteral("SetAction"),
+                     {QVariant::fromValue(QStringLiteral("Keypress"))});
+    // Step 2: SetKeys on the Action.Keypress interface at the gesture node, after
+    // step 1's reply (the live performParamCall sequences SetKeys behind SetAction).
+    performParamCall(direction, st.mode, QStringLiteral("SetKeys"),
+                     {QVariant::fromValue(evdevNames)});
+
+    st.actionType = QStringLiteral("Keypress");
+
+    if (_configState != nullptr)
+        _configState->markDirty();
+
+    if (direction == _active)
+        emit previewChanged();
+    return true;
+}
+
 void GestureModel::setActiveDirection(const QString& direction) {
     if (!validDirection(direction) || direction == _active)
         return;
@@ -425,7 +474,15 @@ void GestureModel::performParamCall(const QString& direction, const QString& typ
     if (!_live)
         return;
     const QString childPath = _buttonPath + QStringLiteral("/gestures/") + direction;
-    const QString iface = QStringLiteral("pizza.pixl.LogiOps.Gesture.") + type;
+    // Most param setters live on the per-mode Gesture.<type> interface. The
+    // exception is SetKeys: after SetAction("Keypress"), the daemon publishes the
+    // Keypress action's pizza.pixl.LogiOps.Action.Keypress interface AT THE SAME
+    // gesture node (Action::makeAction is parented on the gesture's _node), so
+    // SetKeys targets that interface, not Gesture.<type>. Ordering is guaranteed by
+    // the same in-order connection: SetAction is queued (below) before this SetKeys.
+    const QString iface = (method == QLatin1String("SetKeys"))
+            ? QStringLiteral("pizza.pixl.LogiOps.Action.Keypress")
+            : (QStringLiteral("pizza.pixl.LogiOps.Gesture.") + type);
     const QDBusConnection bus = _bus;
 
     // The actual param setter, fired only once the .Gesture.<type> child node is
@@ -440,6 +497,19 @@ void GestureModel::performParamCall(const QString& direction, const QString& typ
                     gesture->deleteLater();
                 });
     };
+
+    // SetKeys is the second hop of setGestureKeypress: the SetAction("Keypress")
+    // that creates the Action.Keypress interface is queued on this SAME connection
+    // immediately before this call, so by the time SetKeys is processed the daemon
+    // has already created the interface. The Action.Keypress interface therefore
+    // does NOT exist yet at probe time, so (like ButtonsModel::setKeypress) we must
+    // fire SetKeys UNCONDITIONALLY after a single event-loop hop, probing the
+    // already-present Gesture.<type> mode interface purely as the ordering hop —
+    // never gating the fire on the not-yet-created Action.Keypress interface.
+    const bool isSetKeys = (method == QLatin1String("SetKeys"));
+    const QString probeIface = isSetKeys
+            ? (QStringLiteral("pizza.pixl.LogiOps.Gesture.") + type)
+            : iface;
 
     // WR-01: if a SetGesture for this direction is still in flight, chain the
     // param call strictly behind ITS reply instead of probing a child node that
@@ -457,17 +527,19 @@ void GestureModel::performParamCall(const QString& direction, const QString& typ
     }
 
     // No SetGesture in flight (e.g. adjusting a param on an already-set mode).
-    // Probe the child node's interface; only fire the setter if it is present, so
-    // a param call to a missing child node is never issued blind.
+    // Probe the (present) mode interface; only fire the setter if it is present, so
+    // a param call to a missing child node is never issued blind — except SetKeys,
+    // which fires unconditionally after the hop (its target interface is created by
+    // the SetAction queued just before it on this ordered connection).
     auto* probe = new QDBusInterface(
         kService, childPath, QStringLiteral("org.freedesktop.DBus.Properties"), bus, this);
-    auto probePending = probe->asyncCall(QStringLiteral("GetAll"), iface);
+    auto probePending = probe->asyncCall(QStringLiteral("GetAll"), probeIface);
     auto* w = new QDBusPendingCallWatcher(probePending, this);
     connect(w, &QDBusPendingCallWatcher::finished, this,
-            [fire, probe](QDBusPendingCallWatcher* watcher) {
+            [fire, probe, isSetKeys](QDBusPendingCallWatcher* watcher) {
                 watcher->deleteLater();
                 probe->deleteLater();
-                if (!watcher->isError())
+                if (isSetKeys || !watcher->isError())
                     fire();
             });
 }
