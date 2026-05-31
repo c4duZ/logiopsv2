@@ -70,79 +70,116 @@ namespace {
     }
 }
 
+namespace {
+    // Probe order matches the daemon allowlist; "None" is meaningful too (an
+    // explicitly-cleared direction reads back as "Nothing", not unconfigured).
+    // The FIRST present .Gesture.<type> interface at .../gestures/{dir} wins.
+    const char* const kSeedTypes[] = {"OnInterval", "OnRelease", "Axis", "None"};
+    constexpr int kSeedTypeCount = 4;
+}
+
 // ---------------------------------------------------------------------------
-// WR-03: seed per-direction state from the daemon's CURRENT gesture config so the
-// builder opens reflecting existing bindings. Mirrors ButtonsModel::enumerate's
-// BTN-04 present-interface readback: for each cardinal direction, find which
-// .Gesture.<type> interface is present at .../gestures/{dir} (the FIRST present
-// one wins) and read its granularity param. Bounded (4 directions x small probe
-// set) and only runs once, lazily, when a button's Gesture category opens.
+// WR-03 (260531-fye, NON-BLOCKING): seed per-direction state from the daemon's
+// CURRENT gesture config so the builder opens reflecting existing bindings.
+// Mirrors ButtonsModel::enumerate's BTN-04 present-interface readback — for each
+// cardinal direction, find which .Gesture.<type> interface is present at
+// .../gestures/{dir} (the FIRST present one wins) and read its granularity param
+// — but does it FULLY ASYNC (mirror DeviceController::introspectInterfaces): the
+// constructor only KICKS OFF the probes and returns immediately. Replies land on
+// the GUI event loop and populate each direction live, emitting configured/
+// previewChanged so an already-open builder updates. No blocking .call() on the
+// GUI thread, so a slow/asleep-device readback can never freeze the window.
 // ---------------------------------------------------------------------------
 void GestureModel::seedFromDaemon() {
     if (!_live)
         return;
-
     static const char* kDirs[] = {"up", "down", "left", "right"};
-    // Probe order matches the daemon allowlist; "None" is meaningful too (an
-    // explicitly-cleared direction reads back as "Nothing", not unconfigured).
-    static const char* kTypes[] = {"OnInterval", "OnRelease", "Axis", "None"};
+    for (const char* d : kDirs)
+        probeDirection(QString::fromUtf8(d), 0);
+}
 
-    bool seededAny = false;
-    for (const char* d : kDirs) {
-        const QString direction = QString::fromUtf8(d);
-        const QString childPath =
-            _buttonPath + QStringLiteral("/gestures/") + direction;
-        QDBusInterface props(
-            kService, childPath,
-            QStringLiteral("org.freedesktop.DBus.Properties"), _bus);
-        // This best-effort readback runs synchronously on the GUI thread; cap the
-        // per-call wait so a slow/asleep-device GetConfig (which makes the daemon
-        // do a HID++ hardware read) can't freeze the window for the 25s default
-        // D-Bus timeout. A missed seed just leaves a direction's default phrase.
-        props.setTimeout(250);
+// Async candidate probe: GetAll the .Gesture.<type> interface at typeIdx via
+// org.freedesktop.DBus.Properties. On a non-error reply the interface is present
+// (first-wins): record the mode and kick the param read. On error/absence, chain
+// to the next candidate type. Past the last type, the direction stays unset (its
+// default "does nothing" phrase). All hops are async — nothing blocks the loop.
+void GestureModel::probeDirection(const QString& direction, int typeIdx) {
+    if (!_live || typeIdx >= kSeedTypeCount)
+        return;
+    const QString type = QString::fromUtf8(kSeedTypes[typeIdx]);
+    const QString childPath =
+        _buttonPath + QStringLiteral("/gestures/") + direction;
+    const QString iface = QStringLiteral("pizza.pixl.LogiOps.Gesture.") + type;
 
-        for (const char* t : kTypes) {
-            const QString type = QString::fromUtf8(t);
-            const QString iface = QStringLiteral("pizza.pixl.LogiOps.Gesture.") + type;
-            QDBusReply<QVariantMap> got = props.call(QStringLiteral("GetAll"), iface);
-            if (!got.isValid())
-                continue;
-
-            DirectionState& st = stateFor(direction);
-            st.mode = type;
-            st.plainMode = plainModeForType(type);
-
-            // Read the granularity param via the per-mode getter (best-effort; a
-            // missing/zeroed value just leaves the default granularity phrase).
-            QDBusInterface gesture(kService, childPath, iface, _bus);
-            gesture.setTimeout(250);
-            if (type == QLatin1String("OnInterval")) {
-                QDBusMessage reply = gesture.call(QStringLiteral("GetConfig"));
-                if (reply.type() == QDBusMessage::ReplyMessage &&
-                    !reply.arguments().isEmpty()) {
-                    st.granularity = reply.arguments().at(0).toInt();
+    QDBusMessage msg = QDBusMessage::createMethodCall(
+        kService, childPath,
+        QStringLiteral("org.freedesktop.DBus.Properties"),
+        QStringLiteral("GetAll"));
+    msg << iface;
+    auto* watcher = new QDBusPendingCallWatcher(_bus.asyncCall(msg), this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this,
+            [this, watcher, direction, type, typeIdx]() {
+                QDBusPendingReply<QVariantMap> reply = *watcher;
+                watcher->deleteLater();
+                if (reply.isError()) {
+                    // Absent (or unreadable) — try the next candidate type.
+                    probeDirection(direction, typeIdx + 1);
+                    return;
                 }
-            } else if (type == QLatin1String("OnRelease")) {
-                QDBusReply<int> thr = gesture.call(QStringLiteral("GetThreshold"));
-                if (thr.isValid())
-                    st.granularity = thr.value();
-            } else if (type == QLatin1String("Axis")) {
-                QDBusMessage reply = gesture.call(QStringLiteral("GetConfig"));
-                if (reply.type() == QDBusMessage::ReplyMessage &&
-                    reply.arguments().size() >= 2) {
+                // First present interface wins: lock this direction's mode.
+                DirectionState& st = stateFor(direction);
+                st.mode = type;
+                st.plainMode = plainModeForType(type);
+                emit configuredChanged(direction);
+                emit previewChanged();
+                // Async-read the granularity param for this mode (best-effort).
+                seedParam(direction, type);
+            });
+}
+
+// Async granularity read for an already-resolved (direction, type). Reads the
+// mode's granularity-bearing getter and stores it, then re-emits previewChanged
+// so the open builder reflects the seeded value. Best-effort: a missing/zeroed
+// value just leaves the default granularity phrase. "None" carries no param.
+void GestureModel::seedParam(const QString& direction, const QString& type) {
+    if (!_live)
+        return;
+    const QString childPath =
+        _buttonPath + QStringLiteral("/gestures/") + direction;
+    const QString iface = QStringLiteral("pizza.pixl.LogiOps.Gesture.") + type;
+
+    QString method;
+    if (type == QLatin1String("OnInterval") || type == QLatin1String("Axis"))
+        method = QStringLiteral("GetConfig");
+    else if (type == QLatin1String("OnRelease"))
+        method = QStringLiteral("GetThreshold");
+    else
+        return; // "None": no granularity param to read.
+
+    QDBusMessage msg =
+        QDBusMessage::createMethodCall(kService, childPath, iface, method);
+    auto* watcher = new QDBusPendingCallWatcher(_bus.asyncCall(msg), this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this,
+            [this, watcher, direction, type]() {
+                QDBusMessage reply = watcher->reply();
+                watcher->deleteLater();
+                if (reply.type() != QDBusMessage::ReplyMessage)
+                    return;
+                const QVariantList args = reply.arguments();
+                if (args.isEmpty())
+                    return;
+                DirectionState& st = stateFor(direction);
+                if (type == QLatin1String("OnInterval")) {
+                    st.granularity = args.at(0).toInt();
+                } else if (type == QLatin1String("OnRelease")) {
+                    st.granularity = args.at(0).toInt();
+                } else if (type == QLatin1String("Axis")) {
                     // GetConfig -> (axis, multiplier, threshold); granularity = mult.
-                    st.granularity =
-                        qRound(reply.arguments().at(1).toDouble());
+                    if (args.size() >= 2)
+                        st.granularity = qRound(args.at(1).toDouble());
                 }
-            }
-            seededAny = true;
-            emit configuredChanged(direction);
-            break; // first present interface wins
-        }
-    }
-
-    if (seededAny)
-        emit previewChanged();
+                emit previewChanged();
+            });
 }
 
 // ---------------------------------------------------------------------------

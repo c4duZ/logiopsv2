@@ -178,7 +178,22 @@ private:
     // present at .../gestures/{dir} for each cardinal direction (mirroring
     // ButtonsModel::enumerate's BTN-04 present-interface readback) and reads its
     // params, then emits previewChanged/configuredChanged. No-op off the live path.
+    //
+    // FULLY ASYNC (260531-fye): the constructor must NEVER block the GUI event
+    // loop on a D-Bus round-trip. seedFromDaemon only KICKS OFF the probes (via
+    // _bus.asyncCall + QDBusPendingCallWatcher, mirroring
+    // DeviceController::introspectInterfaces) and returns immediately; replies
+    // land later on the event loop and populate each direction's state live.
     void seedFromDaemon();
+
+    // Async per-direction probe: GetAll the candidate .Gesture.<type> interface
+    // at typeIdx; the first present one wins. On a present reply, populate the
+    // direction's state, kick its param read, emit configured/previewChanged, and
+    // stop; on absence, advance to the next candidate type. No-op off live.
+    void probeDirection(const QString& direction, int typeIdx);
+    // Async param read for an already-resolved (direction, type): reads the
+    // mode's granularity-bearing getter and stores it, then emits previewChanged.
+    void seedParam(const QString& direction, const QString& type);
 
     QHash<QString, DirectionState> _dirs;
     QString _active = QStringLiteral("up");
