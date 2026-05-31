@@ -105,13 +105,6 @@ target_link_libraries(logiops-gui PRIVATE
 qt_add_qml_module(logiops-gui
         URI logiops.gui
         VERSION 1.0
-        # Disable the precompiled QML cache (qmlcachegen). Incremental full builds
-        # on this Qt (6.4) regenerate the qmltyperegistration but reuse stale
-        # per-file .qmlc units for the states/ screens, producing the recurring
-        # runtime "XState is not a type" load failure. QML is interpreted at
-        # runtime instead — imperceptible for a config GUI, and the corruption
-        # class disappears (no .qmlc to go stale).
-        NO_CACHEGEN
         QML_FILES
             qml/Main.qml
             qml/DeviceList.qml
