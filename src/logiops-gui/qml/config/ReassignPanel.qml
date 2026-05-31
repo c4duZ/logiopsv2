@@ -265,10 +265,16 @@ Rectangle {
                             root.expanded = "";
                             return;
                         }
-                        // Pitfall 3 sequence: SetAction("Gesture") FIRST so the daemon
-                        // builds the GestureAction (and its gestures map) before any
-                        // SetGesture runs; THEN build the button-scoped model + open.
-                        if (root.buttonsModel)
+                        // Only (re)build the GestureAction when the button is NOT
+                        // already a gesture. SetAction("Gesture") creates a FRESH,
+                        // EMPTY GestureAction on the daemon — which WIPES the button's
+                        // existing per-direction gestures (and their D-Bus child
+                        // nodes) loaded from logid.cfg. For a button that is already a
+                        // gesture, skip it and open the builder on the EXISTING config
+                        // (seedFromDaemon reflects it; per-direction edits reconfigure
+                        // the live gesture in place). Pitfall 3 (SetAction before any
+                        // SetGesture) only applies when first converting the button.
+                        if (root.buttonsModel && root.currentType !== "Gesture")
                             root.buttonsModel.setAction(root.row, "Gesture");
                         if (root.controller && root.buttonPath.length > 0)
                             root.gestureModel = root.controller.gestureModelForButton(root.buttonPath);
