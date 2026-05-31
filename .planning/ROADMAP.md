@@ -25,7 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Access Path & Daemon Hardening** - Relax D-Bus policy to a group, polkit-gate writes, sandbox the daemon, length-check HID input so a non-root client can safely reach `pizza.pixl.LogiOps` (completed 2026-05-30)
 - [x] **Phase 2: D-Bus Client & Device List** - Qt/QML app shell + typed D-Bus proxy showing a live, signal-driven device list with battery and connection status (completed 2026-05-30)
 - [ ] **Phase 3: Core Config UI & Persistence** - Visual button remap, DPI, scroll/thumbwheel, manual profiles, and polkit-gated save — the Options+-style "configure without editing text" core
-- [ ] **Phase 4: Fine-Grained Gesture Control** - First daemon extension: a guided gesture builder with magnitude/repetition/granularity that fixes "volume +2" and "one desktop per gesture"
+- [x] **Phase 4: Fine-Grained Gesture Control** - First daemon extension: a guided gesture builder with magnitude/repetition/granularity that fixes "volume +2" and "one desktop per gesture" (completed 2026-05-31)
 - [ ] **Phase 5: Per-Application Profiles & Profile Sharing** - User-session focus watcher (X11 + Wayland) auto-switching profiles by app, plus profile import/export
 - [ ] **Phase 6: Action Wheel** - Flagship radial action menu: new daemon `ActionWheel` feature + GUI overlay (X11 → Wayland layer-shell → fallback), spiked first
 - [ ] **Phase 7: Smart Actions / Macros** - Composite multi-step action (keystrokes/text/media/delays) with launch/open-URL steps routed through a non-root session helper
@@ -98,10 +98,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can make a gesture repeat per interval (e.g. switch several desktops in one continuous motion)
   4. The gesture UI explains in plain language when and how often the action will fire
 **Plans**: 4 plans
-  - [ ] 04-00-PLAN.md — Wave 0: tests/phase4 CTest harness + RED gesture_math (GEST-02/03 accounting) + RED GestureModel scaffold (GEST-01/04)
-  - [ ] 04-01-PLAN.md — Daemon: fix IntervalGesture granularity defect + defaults::gesture_interval + harden setGesture against untrusted input (GEST-02, GEST-03)
-  - [ ] 04-02-PLAN.md — GUI brain: GestureModel two-step mode-switch + mode allowlist + preview sentence + granularity readout + typed Action.Gesture proxy (GEST-01..04)
-  - [ ] 04-03-PLAN.md — GUI: GestureBuilder.qml (direction cross/mode pills/action/granularity/preview) + Theme tokens/glyphs + ReassignPanel category + on-hardware UAT (GEST-01..04)
+  - [x] 04-00-PLAN.md — Wave 0: tests/phase4 CTest harness + RED gesture_math (GEST-02/03 accounting) + RED GestureModel scaffold (GEST-01/04)
+  - [x] 04-01-PLAN.md — Daemon: fix IntervalGesture granularity defect + defaults::gesture_interval + harden setGesture against untrusted input (GEST-02, GEST-03)
+  - [x] 04-02-PLAN.md — GUI brain: GestureModel two-step mode-switch + mode allowlist + preview sentence + granularity readout + typed Action.Gesture proxy (GEST-01..04)
+  - [x] 04-03-PLAN.md — GUI: GestureBuilder.qml (direction cross/mode pills/action/granularity/preview) + Theme tokens/glyphs + ReassignPanel category + on-hardware UAT (GEST-01..04)
 **UI hint**: yes
 **Research flag**: This is the first C++ daemon extension — confirm the magnitude/repetition/granularity abstraction over existing `axis_multiplier`/`threshold`/`interval` and fix uinput recreate-per-code churn while in this code.
 
@@ -173,7 +173,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Access Path & Daemon Hardening | 6/6 | Complete    | 2026-05-30 |
 | 2. D-Bus Client & Device List | 5/5 | Complete    | 2026-05-30 |
 | 3. Core Config UI & Persistence | 0/5 | Not started | - |
-| 4. Fine-Grained Gesture Control | 0/4 | Not started | - |
+| 4. Fine-Grained Gesture Control | 4/4 | Complete    | 2026-05-31 |
 | 5. Per-Application Profiles & Profile Sharing | 0/TBD | Not started | - |
 | 6. Action Wheel | 0/TBD | Not started | - |
 | 7. Smart Actions / Macros | 0/TBD | Not started | - |
