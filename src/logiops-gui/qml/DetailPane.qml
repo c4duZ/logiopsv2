@@ -35,6 +35,13 @@ Rectangle {
     Repeater {
         id: rows
         model: deviceModel
+        // The hidden delegates instantiate asynchronously: when a device is
+        // auto-selected, currentIndex can reach a valid row BEFORE this Repeater
+        // has built its Item for that row, so selectedItem() (and thus the path
+        // handed to the DeviceController factory) would resolve empty and the
+        // per-device controller would never be built. Re-run the path sync once
+        // the delegates exist so capability discovery fires on the real path.
+        onCountChanged: pane.syncController()
         delegate: Item {
             readonly property bool current: index === pane.currentIndex
             readonly property string rPath: model.path

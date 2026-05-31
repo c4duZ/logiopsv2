@@ -62,6 +62,10 @@ class ProfilesModel : public QAbstractListModel {
     Q_OBJECT
 
     Q_PROPERTY(QString activeProfile READ activeProfile NOTIFY activeProfileChanged)
+    // Row count as a NOTIFYable property: profiles arrive via an async GetProfiles,
+    // so QML visibility bindings must react to it (a bare rowCount() call binds
+    // once, while empty, and goes stale — leaving "No profiles yet" stuck).
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
 
 public:
     enum Roles {
@@ -109,6 +113,7 @@ public:
 
 signals:
     void activeProfileChanged();
+    void countChanged();
 
 protected:
     // Daemon-write hooks. The live path issues the async D-Bus call + refreshes;

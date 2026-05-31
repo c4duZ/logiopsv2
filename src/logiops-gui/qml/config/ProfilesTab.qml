@@ -59,7 +59,7 @@ Item {
                 Layout.leftMargin: Theme.spacingLg
                 Layout.rightMargin: Theme.spacingLg
                 spacing: Theme.spacingSm
-                visible: !root.profilesModel || root.profilesModel.rowCount() === 0
+                visible: !root.profilesModel || root.profilesModel.count === 0
 
                 Text {
                     text: qsTr("No profiles yet")
@@ -158,7 +158,7 @@ Item {
                             ToolButton {
                                 id: removePill
                                 visible: !renameLoader.active && root.profilesModel
-                                         && root.profilesModel.rowCount() > 1
+                                         && root.profilesModel.count > 1
                                 text: "✕"
                                 ToolTip.visible: hovered
                                 ToolTip.text: qsTr("Remove profile")

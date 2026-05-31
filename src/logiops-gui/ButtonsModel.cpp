@@ -122,6 +122,7 @@ void ButtonsModel::seedButtons(const QVector<ButtonInfo>& buttons) {
             b.name = tr("Button (CID 0x%1)").arg(b.controlId, 0, 16);
     }
     endResetModel();
+    emit countChanged();
 }
 
 // ---------------------------------------------------------------------------
@@ -383,6 +384,7 @@ void ButtonsModel::enumerate() {
                 beginResetModel();
                 _rows = rows;
                 endResetModel();
+                emit countChanged();
             });
 }
 

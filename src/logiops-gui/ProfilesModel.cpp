@@ -75,6 +75,7 @@ void ProfilesModel::seedProfiles(const QStringList& names, const QString& active
     _names = names;
     _default = def;
     endResetModel();
+    emit countChanged();
     setActive(active);
 }
 

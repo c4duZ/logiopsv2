@@ -41,7 +41,7 @@ Item {
     readonly property bool hasAnyRemappable: {
         if (!buttonsModel)
             return false;
-        for (var i = 0; i < buttonsModel.rowCount(); ++i) {
+        for (var i = 0; i < buttonsModel.count; ++i) {
             var idx = buttonsModel.index(i, 0);
             if (buttonsModel.data(idx, 0x0103)) // RemappableRole (UserRole+3)
                 return true;
@@ -51,7 +51,7 @@ Item {
 
     Text {
         anchors.centerIn: parent
-        visible: buttonsModel && buttonsModel.rowCount() === 0
+        visible: buttonsModel && buttonsModel.count === 0
         text: qsTr("This device has no reassignable buttons.")
         color: Theme.mutedForeground
         font.pixelSize: Theme.bodySize
@@ -62,7 +62,7 @@ Item {
         anchors.fill: parent
         anchors.margins: Theme.spacingLg
         spacing: Theme.spacingXl
-        visible: buttonsModel && buttonsModel.rowCount() > 0
+        visible: buttonsModel && buttonsModel.count > 0
 
         // Left: device render with clickable hotspots (BTN-01).
         DeviceRender {

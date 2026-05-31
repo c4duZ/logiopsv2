@@ -65,6 +65,10 @@ class ButtonsModel : public QAbstractListModel {
     Q_OBJECT
 
     Q_PROPERTY(int hostCount READ hostCount WRITE setHostCount NOTIFY hostCountChanged)
+    // Row count exposed as a NOTIFYable property: the row set is populated by an
+    // async Enumerate, so QML visibility bindings must react to it changing
+    // (a bare rowCount() method call would bind once, while empty, and go stale).
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
 
 public:
     enum Roles {
@@ -137,6 +141,7 @@ public:
 
 signals:
     void hostCountChanged();
+    void countChanged();
     // Emitted when a host string is rejected by setChangeHost validation (so the
     // QML panel can show "invalid host" instead of silently dropping it).
     void hostRejected(int row, const QString& host);
