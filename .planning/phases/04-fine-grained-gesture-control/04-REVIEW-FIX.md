@@ -2,11 +2,13 @@
 phase: 04-fine-grained-gesture-control
 fixed_at: 2026-05-31T00:00:00Z
 review_path: .planning/phases/04-fine-grained-gesture-control/04-REVIEW.md
-iteration: 1
-findings_in_scope: 5
-fixed: 4
+verification_path: .planning/phases/04-fine-grained-gesture-control/04-VERIFICATION.md
+iteration: 2
+findings_in_scope: 6
+fixed: 5
 skipped: 1
 status: partial
+verification_gap_fixed: GEST-01
 ---
 
 # Phase 4: Code Review Fix Report
@@ -122,6 +124,50 @@ dedicated Phase 3 performance task.
 code issues synchronous blocking calls (`btn->property(...)` ×4, `GetAll` over 8
 action types, `GetHostCount`), a serial blocking round-trip storm on the UI thread
 that can freeze the UI on an asleep/slow device.
+
+---
+
+# Verification-Gap Fix (post-verifier, 04-VERIFICATION.md)
+
+**Source:** `.planning/phases/04-fine-grained-gesture-control/04-VERIFICATION.md`
+**Status:** GEST-01 partial gap closed (1/1 fixed)
+
+The phase-4 verifier found one gap: the guided gesture builder's "→ action" leg
+was unwired. Choosing what a gesture DIRECTION does routed to ReassignPanel's
+button-level Keystroke capture and called `buttonsModel.setKeypress(row, ...)`,
+which reassigned the WHOLE BUTTON instead of setting that gesture direction's
+action. This closes that gap by wiring the Keystroke action to the gesture
+end-to-end (scoped to Keystroke only — the chooser offers only Keystroke today;
+a full multi-action gesture picker is out of scope for this gap).
+
+### GEST-01 (partial): Gesture action picker rebinds the whole button instead of the gesture direction
+
+**Files modified:** `src/logiops-gui/GestureModel.h`, `src/logiops-gui/GestureModel.cpp`, `src/logiops-gui/qml/config/ReassignPanel.qml`, `tests/phase4/GestureModelTest.cpp`
+**Commit:** 92c7733
+**Applied fix:**
+
+1. **GestureModel — new `Q_INVOKABLE bool setGestureKeypress(const QString& direction, const QStringList& evdevNames)`.** Mirrors `ButtonsModel::setKeypress` two-step but TARGETS THE GESTURE DIRECTION:
+   - Validate-before-dispatch: rejects an invalid direction, a non-action-bearing mode (only OnInterval / OnRelease carry an action — reuses the existing mode guard from `setGestureAction`), and an empty key list before any bus call.
+   - Step 1: `SetAction("Keypress")` on the gesture's `Gesture.<mode>` interface, via the existing virtual `performParamCall`.
+   - Step 2: `SetKeys(evdevNames)` on `pizza.pixl.LogiOps.Action.Keypress` AT THE GESTURE NODE PATH (`<buttonPath>/gestures/<direction>`), sequenced strictly after step 1 — also through `performParamCall`. Confirmed against the daemon: `IntervalGesture`/`ReleaseGesture::setAction` parent `Action::makeAction` on the gesture's own `_node`, so the Keypress action's `SetKeys` is published at the gesture node (exactly like a button).
+   - Records `st.actionType = "Keypress"`, marks `ConfigState` dirty, emits `previewChanged`.
+   - The live `performParamCall` now selects the `Action.Keypress` interface (not `Gesture.<type>`) when `method == "SetKeys"`, and fires `SetKeys` unconditionally after one event-loop hop on the present mode interface — the same in-order-connection ordering `ButtonsModel::setKeypress` relies on (the `Action.Keypress` interface is created by the `SetAction` queued just before it). The WR-01 `_pendingSetGesture` chaining is preserved.
+
+2. **ReassignPanel.qml — route the gesture action capture to the gesture, not the button.** Added `activeGestureDirection`: set when `onChooseActionRequested(direction)` fires, cleared when the Keystroke category is opened directly (normal button reassignment). `KeyCaptureField.onKeysCaptured` branches: in gesture-action mode it calls `gestureModel.setGestureKeypress(activeGestureDirection, names)` and returns to the Gesture section; otherwise it keeps the existing `buttonsModel.setKeypress(root.row, names)` button path. Normal button keystroke reassignment is unchanged. (Renders only — all logic stays in C++.)
+
+3. **Test — extended `tests/phase4/GestureModelTest.cpp` (recording subclass).** `test_gesture_keypress_two_step_order` asserts the exact ORDER: `SetAction("Keypress")` on the gesture mode FIRST, then `SetKeys` with the evdev names SECOND, with the gesture mode/type carried through both calls (proving the gesture node, not the button, is targeted). `test_gesture_keypress_guards` asserts validate-before-dispatch (empty keys, invalid direction, and an action-less Axis mode each record zero dispatch).
+
+**Verification:**
+- `cmake --build build` — clean, `-Werror`, no warnings.
+- `ctest --test-dir build` — 14/14 passed (phase4_gesture_model now carries the two new assertions).
+- QML cache cleared, `logiops-gui` rebuilt, offscreen smoke test — `QML OK` (no "not a type" / "Unknown method" / "Error:" / "warning:").
+
+**Note (requires human verification):** the live two-step async sequencing
+(SetAction → SetKeys on the ordered connection, landing on the gesture node) is
+correct by construction and asserted for ORDER by the recording subclass, but is
+not covered by an automated live-bus test. Confirm on a live daemon: bind a
+Keystroke to one gesture direction and verify the keystroke fires for that
+direction only, with the button's primary action untouched.
 
 ---
 
