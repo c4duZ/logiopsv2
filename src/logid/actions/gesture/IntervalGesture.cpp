@@ -19,6 +19,7 @@
 #include <actions/gesture/IntervalGesture.h>
 #include <Configuration.h>
 #include <util/log.h>
+#include <stdexcept>
 
 using namespace logid::actions;
 
@@ -117,6 +118,19 @@ void IntervalGesture::setThreshold(int threshold) {
 
 void IntervalGesture::setAction(const std::string& type) {
     std::unique_lock lock(_config_mutex);
+    // `type` is an untrusted D-Bus string. makeAction throws InvalidAction on an
+    // unrecognized type and may have partially mutated _config.action. Mirror
+    // GestureAction::setGesture: snapshot the prior config, and on failure restore
+    // a VALID action (from the saved config, or reset) and rethrow a clean D-Bus
+    // error so the node never aborts the root daemon (WR-05, T-04-01-03).
+    auto prev_config = _config.action;
     _action.reset();
-    _action = Action::makeAction(_device, type, _config.action, _node);
+    try {
+        _action = Action::makeAction(_device, type, _config.action, _node);
+    } catch (InvalidAction& e) {
+        _config.action = prev_config;
+        if (_config.action)
+            _action = Action::makeAction(_device, _config.action.value(), _node);
+        throw std::invalid_argument("Invalid action type");
+    }
 }
