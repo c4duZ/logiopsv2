@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <!--
+    Trimmed introspection for the stable Action.Gesture interface
+    (actions/GestureAction.cpp), hosted at .../devices/N/buttons/M when the
+    button's current action is a GestureAction. SetGesture takes a direction
+    string (up, down, left, right, none) and a mode type string
+    (OnInterval, OnRelease, Axis, None). It rebuilds the per direction gesture
+    node live: it drops the old .Gesture.X interface at .../gestures/{direction}
+    and creates the new one, mirroring the Button.SetAction two step.
+
+    The per direction .Gesture.X child interfaces (Axis, OnInterval, OnRelease,
+    None) are dynamically typed and are driven via a generic QDBusInterface in
+    GestureModel.performParamCall, not as typed proxies here. Type codes: s
+    string. GEST 01.
+  -->
+  <interface name="pizza.pixl.LogiOps.Action.Gesture">
+    <method name="SetGesture">
+      <arg name="direction" type="s" direction="in"/>
+      <arg name="type" type="s" direction="in"/>
+    </method>
+  </interface>
+</node>

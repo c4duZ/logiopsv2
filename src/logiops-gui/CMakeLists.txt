@@ -46,6 +46,13 @@ qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_hiresscroll.xml logid_hiresscroll
 qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_thumbwheel.xml  logid_thumbwheel_proxy)
 qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_buttons.xml     logid_buttons_proxy)
 qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_button.xml      logid_button_proxy)
+
+# Phase 4 (Wave 1): the stable Action.Gesture interface as a typed proxy
+# (SetGesture(direction, type) — the gesture mode switch). The per direction
+# .Gesture.<mode> child interfaces stay dynamic (generic QDBusInterface in
+# GestureModel::performParamCall), so only this one stable parent gets a proxy.
+# Generated class (CMAKE_CURRENT_BINARY_DIR): PizzaPixlLogiOpsActionGestureInterface.
+qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_action_gesture.xml logid_action_gesture_proxy)
 # Plan 04 extended logid_device.xml (above) with the profile + restore surface
 # (GetProfiles/SetProfile/RemoveProfile/ClearProfile + ActiveProfile/DefaultProfile)
 # on the SAME PizzaPixlLogiOpsDeviceInterface, so the Profiles tab + ConfigState
@@ -65,6 +72,7 @@ target_sources(logiops-gui-lib PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/KeyNameMapper.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/ProfilesModel.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/ConfigState.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/GestureModel.cpp
         ${GUI_DBUS_SRCS})
 # Qt6::Gui for QGuiApplication::clipboard() (the access-denied Copy CTA). The lib
 # stays free of Qt6::Quick/Qml so the model/connection unit test links lean.
