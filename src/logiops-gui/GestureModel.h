@@ -25,6 +25,8 @@
 #include <QStringList>
 #include <QVariantList>
 
+QT_FORWARD_DECLARE_CLASS(QDBusPendingCallWatcher)
+
 namespace logiops_gui {
 
 class ConfigState;
@@ -165,6 +167,13 @@ private:
     QString _buttonPath;
     QDBusConnection _bus;
     bool _live = false;
+
+    // WR-01: the in-flight SetGesture watcher per direction. A param call for a
+    // direction is chained behind THIS watcher's reply (the .Gesture.<type> child
+    // node does not exist until SetGesture rebuilds it), so a param issued right
+    // after setMode is never fired blind at a not-yet-created interface. Cleared
+    // when the watcher finishes. Live path only.
+    QHash<QString, QDBusPendingCallWatcher*> _pendingSetGesture;
 
     ConfigState* _configState = nullptr;
 };

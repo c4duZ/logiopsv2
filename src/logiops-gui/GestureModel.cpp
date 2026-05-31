@@ -314,10 +314,18 @@ void GestureModel::performSetGesture(const QString& direction, const QString& ty
         kService, _buttonPath, _bus, this);
     auto pending = gesture->SetGesture(direction, type);
     auto* w = new QDBusPendingCallWatcher(pending, this);
+    // WR-01: record the in-flight SetGesture for this direction so a param call
+    // can chain strictly behind THIS reply (the .Gesture.<type> child node does
+    // not exist until SetGesture rebuilds it). The watcher stays alive (not
+    // deleteLater'd here) so a param call arriving mid-flight can connect to its
+    // finished signal; it is cleared and deleted when the reply lands.
+    _pendingSetGesture.insert(direction, w);
     connect(w, &QDBusPendingCallWatcher::finished, this,
-            [gesture](QDBusPendingCallWatcher* watcher) {
-                watcher->deleteLater();
+            [this, gesture, direction](QDBusPendingCallWatcher* watcher) {
                 gesture->deleteLater();
+                if (_pendingSetGesture.value(direction) == watcher)
+                    _pendingSetGesture.remove(direction);
+                watcher->deleteLater();
             });
 }
 
@@ -329,27 +337,47 @@ void GestureModel::performParamCall(const QString& direction, const QString& typ
     const QString iface = QStringLiteral("pizza.pixl.LogiOps.Gesture.") + type;
     const QDBusConnection bus = _bus;
 
-    // Sequence step 2 behind step 1: wait for the .Gesture.<type> interface to
-    // exist. Both calls are queued on the same ordered connection, so a cheap
-    // Properties.GetAll hop guarantees the preceding SetGesture has been
-    // processed (and thus the interface created) before we fire the setter.
-    // Mirrors ButtonsModel::performParamCall exactly.
+    // The actual param setter, fired only once the .Gesture.<type> child node is
+    // known to exist. Mirrors ButtonsModel::performParamCall's final hop.
+    auto fire = [this, childPath, iface, method, args, bus]() {
+        auto* gesture = new QDBusInterface(kService, childPath, iface, bus, this);
+        auto reply = gesture->asyncCallWithArgumentList(method, args);
+        auto* pw = new QDBusPendingCallWatcher(reply, this);
+        connect(pw, &QDBusPendingCallWatcher::finished, this,
+                [gesture](QDBusPendingCallWatcher* w2) {
+                    w2->deleteLater();
+                    gesture->deleteLater();
+                });
+    };
+
+    // WR-01: if a SetGesture for this direction is still in flight, chain the
+    // param call strictly behind ITS reply instead of probing a child node that
+    // may not exist yet. Only fire the setter when SetGesture did NOT error — a
+    // failed mode switch means the .Gesture.<type> interface was never created,
+    // so a blind param call would hit a non-existent interface and be lost.
+    QDBusPendingCallWatcher* pending = _pendingSetGesture.value(direction, nullptr);
+    if (pending != nullptr) {
+        connect(pending, &QDBusPendingCallWatcher::finished, this,
+                [fire](QDBusPendingCallWatcher* watcher) {
+                    if (!watcher->isError())
+                        fire();
+                });
+        return;
+    }
+
+    // No SetGesture in flight (e.g. adjusting a param on an already-set mode).
+    // Probe the child node's interface; only fire the setter if it is present, so
+    // a param call to a missing child node is never issued blind.
     auto* probe = new QDBusInterface(
         kService, childPath, QStringLiteral("org.freedesktop.DBus.Properties"), bus, this);
-    auto pending = probe->asyncCall(QStringLiteral("GetAll"), iface);
-    auto* w = new QDBusPendingCallWatcher(pending, this);
+    auto probePending = probe->asyncCall(QStringLiteral("GetAll"), iface);
+    auto* w = new QDBusPendingCallWatcher(probePending, this);
     connect(w, &QDBusPendingCallWatcher::finished, this,
-            [this, childPath, iface, method, args, probe, bus](QDBusPendingCallWatcher* watcher) {
+            [fire, probe](QDBusPendingCallWatcher* watcher) {
                 watcher->deleteLater();
                 probe->deleteLater();
-                auto* gesture = new QDBusInterface(kService, childPath, iface, bus, this);
-                auto reply = gesture->asyncCallWithArgumentList(method, args);
-                auto* pw = new QDBusPendingCallWatcher(reply, this);
-                connect(pw, &QDBusPendingCallWatcher::finished, this,
-                        [gesture](QDBusPendingCallWatcher* w2) {
-                            w2->deleteLater();
-                            gesture->deleteLater();
-                        });
+                if (!watcher->isError())
+                    fire();
             });
 }
 
