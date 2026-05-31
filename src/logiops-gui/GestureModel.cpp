@@ -21,6 +21,9 @@
 #include <QDBusPendingCall>
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
+#include <QDBusReply>
+#include <QDBusMessage>
+#include <QVariantMap>
 
 #include "ConfigState.h"
 #include "logid_action_gesture_proxy.h"
@@ -41,12 +44,100 @@ namespace {
 
 GestureModel::GestureModel(const QString& buttonPath, const QDBusConnection& bus,
                            QObject* parent)
-    : QObject(parent), _buttonPath(buttonPath), _bus(bus), _live(true) {}
+    : QObject(parent), _buttonPath(buttonPath), _bus(bus), _live(true) {
+    // WR-03: open reflecting the button's existing gesture config, not blank.
+    seedFromDaemon();
+}
 
 GestureModel::GestureModel(QObject* parent)
     : QObject(parent), _bus(QDBusConnection::sessionBus()), _live(false) {}
 
 GestureModel::~GestureModel() = default;
+
+namespace {
+    // Reverse of mapMode: a present daemon .Gesture.<type> -> plain-language mode.
+    // Only the four canonical types are ever produced by the daemon's allowlist.
+    QString plainModeForType(const QString& type) {
+        if (type == QLatin1String("OnInterval"))
+            return QStringLiteral("Repeat while moving");
+        if (type == QLatin1String("OnRelease"))
+            return QStringLiteral("Do once when moved far enough");
+        if (type == QLatin1String("Axis"))
+            return QStringLiteral("Adjust proportionally");
+        if (type == QLatin1String("None"))
+            return QStringLiteral("Nothing");
+        return {};
+    }
+}
+
+// ---------------------------------------------------------------------------
+// WR-03: seed per-direction state from the daemon's CURRENT gesture config so the
+// builder opens reflecting existing bindings. Mirrors ButtonsModel::enumerate's
+// BTN-04 present-interface readback: for each cardinal direction, find which
+// .Gesture.<type> interface is present at .../gestures/{dir} (the FIRST present
+// one wins) and read its granularity param. Bounded (4 directions x small probe
+// set) and only runs once, lazily, when a button's Gesture category opens.
+// ---------------------------------------------------------------------------
+void GestureModel::seedFromDaemon() {
+    if (!_live)
+        return;
+
+    static const char* kDirs[] = {"up", "down", "left", "right"};
+    // Probe order matches the daemon allowlist; "None" is meaningful too (an
+    // explicitly-cleared direction reads back as "Nothing", not unconfigured).
+    static const char* kTypes[] = {"OnInterval", "OnRelease", "Axis", "None"};
+
+    bool seededAny = false;
+    for (const char* d : kDirs) {
+        const QString direction = QString::fromUtf8(d);
+        const QString childPath =
+            _buttonPath + QStringLiteral("/gestures/") + direction;
+        QDBusInterface props(
+            kService, childPath,
+            QStringLiteral("org.freedesktop.DBus.Properties"), _bus);
+
+        for (const char* t : kTypes) {
+            const QString type = QString::fromUtf8(t);
+            const QString iface = QStringLiteral("pizza.pixl.LogiOps.Gesture.") + type;
+            QDBusReply<QVariantMap> got = props.call(QStringLiteral("GetAll"), iface);
+            if (!got.isValid())
+                continue;
+
+            DirectionState& st = stateFor(direction);
+            st.mode = type;
+            st.plainMode = plainModeForType(type);
+
+            // Read the granularity param via the per-mode getter (best-effort; a
+            // missing/zeroed value just leaves the default granularity phrase).
+            QDBusInterface gesture(kService, childPath, iface, _bus);
+            if (type == QLatin1String("OnInterval")) {
+                QDBusMessage reply = gesture.call(QStringLiteral("GetConfig"));
+                if (reply.type() == QDBusMessage::ReplyMessage &&
+                    !reply.arguments().isEmpty()) {
+                    st.granularity = reply.arguments().at(0).toInt();
+                }
+            } else if (type == QLatin1String("OnRelease")) {
+                QDBusReply<int> thr = gesture.call(QStringLiteral("GetThreshold"));
+                if (thr.isValid())
+                    st.granularity = thr.value();
+            } else if (type == QLatin1String("Axis")) {
+                QDBusMessage reply = gesture.call(QStringLiteral("GetConfig"));
+                if (reply.type() == QDBusMessage::ReplyMessage &&
+                    reply.arguments().size() >= 2) {
+                    // GetConfig -> (axis, multiplier, threshold); granularity = mult.
+                    st.granularity =
+                        qRound(reply.arguments().at(1).toDouble());
+                }
+            }
+            seededAny = true;
+            emit configuredChanged(direction);
+            break; // first present interface wins
+        }
+    }
+
+    if (seededAny)
+        emit previewChanged();
+}
 
 // ---------------------------------------------------------------------------
 // Mode allowlist — the SINGLE source of truth for plain-language -> daemon type.

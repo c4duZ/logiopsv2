@@ -161,6 +161,14 @@ private:
 
     DirectionState& stateFor(const QString& direction);
 
+    // WR-03: on live construction, read back the button's EXISTING gesture
+    // configuration so the builder opens reflecting current state instead of
+    // blank (and blind-overwriting it). Probes which .Gesture.<type> interface is
+    // present at .../gestures/{dir} for each cardinal direction (mirroring
+    // ButtonsModel::enumerate's BTN-04 present-interface readback) and reads its
+    // params, then emits previewChanged/configuredChanged. No-op off the live path.
+    void seedFromDaemon();
+
     QHash<QString, DirectionState> _dirs;
     QString _active = QStringLiteral("up");
 
