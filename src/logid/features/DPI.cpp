@@ -46,7 +46,11 @@ uint16_t getClosestDPI(const hidpp20::AdjustableDPI::SensorDPIList& dpi_list,
         else {
             auto it = std::min_element(dpi_list.dpis.begin(), dpi_list.dpis.end(),
                                        [dpi](uint16_t a, uint16_t b) {
-                                           return (dpi - a) < (dpi - b);
+                                           // Nearest by ABSOLUTE distance (WR-01).
+                                           // Promote to int so the subtraction does
+                                           // not wrap in unsigned arithmetic.
+                                           return std::abs(int(dpi) - int(a)) <
+                                                  std::abs(int(dpi) - int(b));
                                        });
             if (it == dpi_list.dpis.end())
                 return 0;
@@ -82,14 +86,19 @@ void DPI::configure() {
             }
         } else {
             const auto& dpis = std::get<std::list<int>>(config);
+            // Guard the empty list: dpis.size() - 1 would underflow to SIZE_MAX
+            // (truncated to 255 in _fillDPILists), forcing 256 sensor reads (WR-02).
+            if (dpis.empty())
+                return;
             int i = 0;
             _fillDPILists(dpis.size() - 1);
             std::shared_lock dpi_lock(_dpi_list_mutex);
             for (const auto& dpi: dpis) {
-                if (dpi != 0) {
+                if (dpi != 0)
                     _adjustable_dpi->setSensorDPI(i, getClosestDPI(_dpi_lists.at(i), dpi));
-                    ++i;
-                }
+                // Advance per element so a 0 entry mid-list does not shift every
+                // subsequent DPI onto the wrong sensor index (WR-02).
+                ++i;
             }
         }
     }
