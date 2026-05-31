@@ -53,7 +53,7 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 
 ### Profiles
 
-- [ ] **PROF-01**: User can create, name, and manually switch between configuration profiles
+- [x] **PROF-01**: User can create, name, and manually switch between configuration profiles
 - [ ] **PROF-02**: User can have a profile auto-activate based on the focused application (per-app profiles)
 - [ ] **PROF-03**: User can define app-match rules (window class / executable) for per-app profile switching
 - [ ] **PROF-04**: User can export a profile to a shareable file and import one
@@ -77,7 +77,7 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 ### Config & Persistence
 
 - [x] **CONF-01**: User can apply changes live and persist them without editing any text file
-- [ ] **CONF-02**: User can restore a device to default settings
+- [x] **CONF-02**: User can restore a device to default settings
 - [x] **CONF-03**: GUI state stays in sync with the daemon's live state (signal-driven; no stale config), with the daemon as single source of truth
 
 ### Visual / UX
@@ -134,9 +134,9 @@ Which phases cover which requirements. Populated during roadmap creation.
 | SCR-02 | Phase 3 | Complete |
 | SCR-03 | Phase 3 | Complete |
 | HOST-01 | Phase 3 | Complete |
-| PROF-01 | Phase 3 | Pending |
+| PROF-01 | Phase 3 | Complete |
 | CONF-01 | Phase 3 | Complete |
-| CONF-02 | Phase 3 | Pending |
+| CONF-02 | Phase 3 | Complete |
 | UI-01 | Phase 3 | Complete |
 | GEST-01 | Phase 4 | Pending |
 | GEST-02 | Phase 4 | Pending |

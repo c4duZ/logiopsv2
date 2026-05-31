@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 03-03-PLAN.md (Pointer + Scroll tabs + device-scoped DPI presets); Task 4 on-hardware verify pending
-last_updated: "2026-05-30T23:51:08.351Z"
-last_activity: 2026-05-30
+status: verifying
+stopped_at: Completed 03-04-PLAN.md (Profiles + persistence); Task 3 on-hardware human-verify pending
+last_updated: "2026-05-31T00:11:34.014Z"
+last_activity: 2026-05-31
 progress:
   total_phases: 9
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 16
-  completed_plans: 15
-  percent: 94
+  completed_plans: 16
+  percent: 100
 ---
 
 # Project State
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 
 Phase: 03 (Core Config UI & Persistence) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
-Last activity: 2026-05-30
+Status: Phase complete — ready for verification
+Last activity: 2026-05-31
 
 Progress: [███████▌░░] 75%
 
@@ -67,6 +67,7 @@ Progress: [███████▌░░] 75%
 | Phase 03-core-config-ui-persistence P01 | 8 | 3 tasks | 27 files |
 | Phase 03-core-config-ui-persistence P02 | 18 | 2 tasks | 16 files |
 | Phase 03 P03 | 20 | 3 tasks | 14 files |
+| Phase 03-core-config-ui-persistence P04 | 38 | 2 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,7 @@ Recent decisions affecting current work:
 - [Phase 03-core-config-ui-persistence]: DeviceController per-device QObject discovers capabilities via D-Bus Introspect (present-interface set -> lazy typed proxies, mirroring daemon _addFeature), exposes capability flags + live-value Q_PROPERTYs with optimistic async setters; DeviceControllerFactory owns/swaps it on selection (single context property). Tabbed DetailPane: header + sliding accent TabBar + cross-fading ConfigTabs StackLayout with whole-tab capability omission (UI-01). Phase 3 Theme tokens + 12 glyphs landed. phase3_device_controller + full suite 9/9 GREEN.
 - [Phase 03-core-config-ui-persistence]: [Phase 3]: Buttons tab landed (BTN-01..04, HOST-01) — ButtonsModel does the strict two-step async reassign (SetAction then .Action.<type> param setter) over .Buttons/.Button, CID-keyed; setChangeHost pre-validates 1..N/next/prev before the D-Bus call (T-3-02-02 stoi DoS guard, unit-asserted). HOST-01 via option-a: exposed read-only daemon ChangeHost.GetHostCount (-Werror clean); GUI seeds host slots from it. QML: synced DeviceRender+BindingList + non-modal ReassignPanel (7 categories, live key-capture, device-driven host slots). ButtonsModel owned by DeviceControllerFactory (per-device swap); KeyNameMapper exposed to QML via keyNames bridge. 10/10 CTest GREEN. On-hardware reassign/key-capture/host-switch deferred to phase gate.
 - [Phase 03]: [Phase 3]: DPI-cycle persistence resolved option-a (device-scoped) — config::DpiPreset {value,label} on Profile.dpi_presets + .DPI GetPresets/SetPresets (parallel au/as arrays); extended phase3_save_roundtrip proves values AND labels survive Save. Pointer/Scroll tabs landed (DPI-01..03/SCR-01..03), Scroll sections capability-gated; thumbwheel tap via .ThumbWheel.SetTap (no daemon change). Daemon -Werror clean, phase3 6/6 GREEN.
+- [Phase 03-core-config-ui-persistence]: [Phase 3]: Persistence loop closed (PROF-01/CONF-01/CONF-02) — ProfilesModel (create/switch/remove/rename over .Device.SetProfile/RemoveProfile) + global ConfigState (markDirty from every tab setter; async polkit-gated .Config.Save via QDBusPendingCallWatcher, no UI freeze/no retry-storm; AccessDenied->auth-declined / ServiceUnknown->daemon-down copy with dirty held on error per T-3-04-03; .Device.ClearProfile restore behind a confirmation dialog). Single PizzaPixlLogiOpsDeviceInterface extended (a 2nd XML for the same interface name collides). phase3 7/7 + full 12/12 GREEN, -Werror clean, QML loads clean. Task 3 on-hardware polkit/persistence/restore verify pending.
 
 ### Pending Todos
 
@@ -108,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-30T23:51:01.673Z
-Stopped at: Completed 03-03-PLAN.md (Pointer + Scroll tabs + device-scoped DPI presets); Task 4 on-hardware verify pending
+Last session: 2026-05-31T00:11:26.969Z
+Stopped at: Completed 03-04-PLAN.md (Profiles + persistence); Task 3 on-hardware human-verify pending
 Resume file: None
