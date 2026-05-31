@@ -26,6 +26,9 @@
 #include <QDBusReply>
 #include <QRegularExpression>
 
+#include <functional>
+#include <memory>
+
 #include "ConfigState.h"
 #include "logid_button_proxy.h"
 #include "logid_buttons_proxy.h"
@@ -49,6 +52,11 @@ namespace {
     QString defaultSummary(const QString& type) {
         if (type == QLatin1String("None") || type.isEmpty())
             return QObject::tr("Disabled");
+        // "Default" is the synthetic un-divert pseudo-type: the button regains its
+        // native hardware function. The daemon never reports it as a present
+        // .Action.<X> interface (it carries NO action), so an enumerate read-back of
+        // a restored button comes back as "None"; the optimistic row uses this label.
+        if (type == QLatin1String("Default")) return QObject::tr("Default (native)");
         if (type == QLatin1String("Keypress")) return QObject::tr("Keystroke");
         if (type == QLatin1String("ChangeDPI")) return QObject::tr("Change DPI");
         if (type == QLatin1String("CycleDPI")) return QObject::tr("Cycle DPI");
@@ -57,6 +65,19 @@ namespace {
         if (type == QLatin1String("ToggleSmartShift")) return QObject::tr("Toggle SmartShift");
         if (type == QLatin1String("ToggleHiresScroll")) return QObject::tr("Toggle hi-res scroll");
         return type;
+    }
+
+    // Human label for a BTN_* mouse-button re-emit (routed through Keypress). When
+    // the evdev name is not a known mouse button, fall back to the raw name.
+    QString mouseButtonSummary(const QString& btnName) {
+        if (btnName == QLatin1String("BTN_MIDDLE")) return QObject::tr("Middle click");
+        if (btnName == QLatin1String("BTN_LEFT")) return QObject::tr("Left click");
+        if (btnName == QLatin1String("BTN_RIGHT")) return QObject::tr("Right click");
+        if (btnName == QLatin1String("BTN_BACK")) return QObject::tr("Back");
+        if (btnName == QLatin1String("BTN_FORWARD")) return QObject::tr("Forward");
+        if (btnName == QLatin1String("BTN_SIDE")) return QObject::tr("Side");
+        if (btnName == QLatin1String("BTN_EXTRA")) return QObject::tr("Extra");
+        return btnName;
     }
 }
 
@@ -138,6 +159,7 @@ void ButtonsModel::setAction(int row, const QString& type) {
         return;
     performSetAction(row, type);
     applyCurrentAction(row, type, defaultSummary(type));
+    reconcileFromDaemon(row);
 }
 
 void ButtonsModel::setKeypress(int row, const QStringList& evdevNames) {
@@ -147,6 +169,20 @@ void ButtonsModel::setKeypress(int row, const QStringList& evdevNames) {
     performParamCall(row, QStringLiteral("Keypress"), QStringLiteral("SetKeys"),
                      {QVariant::fromValue(evdevNames)});
     applyCurrentAction(row, QStringLiteral("Keypress"), evdevNames.join(QStringLiteral(" + ")));
+    // performParamCall reconciles after step 2 lands; no direct reconcile here.
+}
+
+void ButtonsModel::setMouseButton(int row, const QString& btnName) {
+    if (!validRow(row) || !_rows.at(row).remappable || btnName.isEmpty())
+        return;
+    // BTN_* are EV_KEY codes the daemon's InputDevice already registers, so a
+    // mouse-button re-emit is just a single-key Keypress. Re-uses the proven
+    // two-step path; the summary renders the human button label.
+    performSetAction(row, QStringLiteral("Keypress"));
+    performParamCall(row, QStringLiteral("Keypress"), QStringLiteral("SetKeys"),
+                     {QVariant::fromValue(QStringList{btnName})});
+    applyCurrentAction(row, QStringLiteral("Keypress"), mouseButtonSummary(btnName));
+    // performParamCall reconciles after step 2 lands; no direct reconcile here.
 }
 
 void ButtonsModel::setChangeDpi(int row, int change) {
@@ -158,6 +194,7 @@ void ButtonsModel::setChangeDpi(int row, int change) {
     applyCurrentAction(row, QStringLiteral("ChangeDPI"),
                        tr("Change DPI %1%2").arg(change >= 0 ? QStringLiteral("+") : QString())
                            .arg(change));
+    // performParamCall reconciles after step 2 lands; no direct reconcile here.
 }
 
 void ButtonsModel::setCycleDpi(int row, const QList<int>& dpis) {
@@ -167,6 +204,7 @@ void ButtonsModel::setCycleDpi(int row, const QList<int>& dpis) {
     performParamCall(row, QStringLiteral("CycleDPI"), QStringLiteral("SetDPIs"),
                      {QVariant::fromValue(dpis)});
     applyCurrentAction(row, QStringLiteral("CycleDPI"), tr("Cycle DPI"));
+    // performParamCall reconciles after step 2 lands; no direct reconcile here.
 }
 
 bool ButtonsModel::setChangeHost(int row, const QString& host) {
@@ -202,6 +240,7 @@ bool ButtonsModel::setChangeHost(int row, const QString& host) {
                         h == QLatin1String("previous"))
                            ? tr("Host %1").arg(h)
                            : tr("Host %1").arg(h.toInt()));
+    // performParamCall reconciles after step 2 lands; no direct reconcile here.
     return true;
 }
 
@@ -212,6 +251,7 @@ void ButtonsModel::setChangeProfile(int row, const QString& name) {
     performParamCall(row, QStringLiteral("ChangeProfile"), QStringLiteral("SetProfile"),
                      {QVariant::fromValue(name)});
     applyCurrentAction(row, QStringLiteral("ChangeProfile"), tr("Profile %1").arg(name));
+    // performParamCall reconciles after step 2 lands; no direct reconcile here.
 }
 
 void ButtonsModel::setToggleSmartShift(int row) {
@@ -222,11 +262,25 @@ void ButtonsModel::setToggleHiresScroll(int row) {
     setAction(row, QStringLiteral("ToggleHiresScroll"));
 }
 
+void ButtonsModel::restoreDefault(int row) {
+    if (!validRow(row) || !_rows.at(row).remappable)
+        return;
+    // SetAction("Default") -> the daemon resets the config (no action) and
+    // RemapButton drops the TemporaryDiverted bit, so the device handles the
+    // control natively again. DISTINCT from clearAction("None"): "None" keeps the
+    // button diverted-but-inert (dead); "Default" gives the button back its real
+    // hardware function. No param step (Default carries no parameters).
+    performSetAction(row, QStringLiteral("Default"));
+    applyCurrentAction(row, QStringLiteral("Default"), tr("Default (native)"));
+    reconcileFromDaemon(row);
+}
+
 void ButtonsModel::clearAction(int row) {
     if (!validRow(row) || !_rows.at(row).remappable)
         return;
     performSetAction(row, QStringLiteral("None"));
     applyCurrentAction(row, QStringLiteral("None"), tr("Disabled"));
+    reconcileFromDaemon(row);
 }
 
 void ButtonsModel::applyCurrentAction(int row, const QString& type,
@@ -259,14 +313,23 @@ void ButtonsModel::performSetAction(int row, const QString& type) {
         _bus, this);
     auto pending = btn->asyncCall(QStringLiteral("SetAction"), type);
     auto* w = new QDBusPendingCallWatcher(pending, this);
+    // Record this watcher as the pending step-1 for this path, so a subsequent
+    // performParamCall (issued back-to-back by the public setter) can chain its
+    // per-type setter off the ACTUAL SetAction reply rather than a separate
+    // GetAll-probe that merely ASSUMES ordering and fires even on SetAction error.
+    _pendingSetAction.insert(path, w);
     connect(w, &QDBusPendingCallWatcher::finished, this,
-            [btn](QDBusPendingCallWatcher* watcher) {
+            [this, btn, path](QDBusPendingCallWatcher* watcher) {
+                // Drop the pending registration once resolved; performParamCall
+                // either already attached or there was no param step.
+                if (_pendingSetAction.value(path) == watcher)
+                    _pendingSetAction.remove(path);
                 watcher->deleteLater();
                 btn->deleteLater();
                 // SetAction reconfigures the hardware itself (RemapButton.cpp);
-                // an error here means the button refused the type (e.g. raced a
-                // non-remappable). The row's optimistic state already reflects the
-                // intent; no further action needed on the happy path.
+                // an error here means the button refused the type. The optimistic
+                // row already reflects the intent; reconcileFromDaemon (queued by
+                // the setter) corrects it against the daemon's real applied action.
             });
 }
 
@@ -278,33 +341,142 @@ void ButtonsModel::performParamCall(int row, const QString& type,
     const QString iface = QStringLiteral("pizza.pixl.LogiOps.Action.") + type;
     const QDBusConnection bus = _bus;
 
-    // Sequence step 2 behind step 1: re-issue SetAction here is NOT needed (the
-    // public setters already called performSetAction). Instead we must wait for
-    // the .Action.<type> interface to exist. Since both calls are queued on the
-    // same connection in order, a defensive 0ms event-loop hop guarantees the
-    // SetAction reply (and thus the interface creation) is processed first. Use a
-    // QDBusPendingCallWatcher on a cheap Introspect to chain after SetAction.
-    auto* probe = new QDBusInterface(
-        kService, path, QStringLiteral("org.freedesktop.DBus.Properties"), bus, this);
-    auto pending = probe->asyncCall(
-        QStringLiteral("GetAll"), iface);
-    auto* w = new QDBusPendingCallWatcher(pending, this);
-    connect(w, &QDBusPendingCallWatcher::finished, this,
-            [this, path, iface, method, args, probe, bus](QDBusPendingCallWatcher* watcher) {
-                watcher->deleteLater();
-                probe->deleteLater();
-                // Whether or not the probe succeeded, the SetAction that preceded
-                // it on this ordered connection has now been processed, so the
-                // .Action.<type> interface exists. Fire the param setter.
-                auto* action = new QDBusInterface(kService, path, iface, bus, this);
-                auto reply = action->asyncCallWithArgumentList(method, args);
-                auto* pw = new QDBusPendingCallWatcher(reply, this);
-                connect(pw, &QDBusPendingCallWatcher::finished, this,
-                        [action](QDBusPendingCallWatcher* w2) {
-                            w2->deleteLater();
-                            action->deleteLater();
-                        });
-            });
+    // Step 2 must fire ONLY after step 1's SetAction reply lands (the
+    // .Action.<type> interface does not exist until then) and ONLY on success (on a
+    // SetAction error the interface is absent, so the param call would hit a
+    // nonexistent interface and silently no-op while the row lies). Chain directly
+    // off the SetAction watcher registered by performSetAction for this path.
+    QDBusPendingCallWatcher* setActionWatcher = _pendingSetAction.value(path, nullptr);
+
+    auto fireParam = [this, path, iface, method, args, bus]() {
+        auto* action = new QDBusInterface(kService, path, iface, bus, this);
+        auto reply = action->asyncCallWithArgumentList(method, args);
+        auto* pw = new QDBusPendingCallWatcher(reply, this);
+        connect(pw, &QDBusPendingCallWatcher::finished, this,
+                [this, action, path](QDBusPendingCallWatcher* w2) {
+                    w2->deleteLater();
+                    action->deleteLater();
+                    // Param landed (or errored) — reconcile the row against the
+                    // daemon's real present action, replacing the optimistic guess.
+                    // The param reply lands strictly after SetAction, so probe
+                    // directly (no need to re-chain through the SetAction watcher).
+                    const int r = rowForPath(path);
+                    if (r >= 0)
+                        doReconcile(r);
+                });
+    };
+
+    if (setActionWatcher != nullptr) {
+        connect(setActionWatcher, &QDBusPendingCallWatcher::finished, this,
+                [fireParam](QDBusPendingCallWatcher* w) {
+                    QDBusPendingReply<> reply = *w;
+                    // Only fire the param setter when SetAction SUCCEEDED — on error
+                    // the .Action.<type> interface was never created.
+                    if (!reply.isError())
+                        fireParam();
+                });
+    } else {
+        // No pending SetAction (e.g. the interface already exists): fire directly.
+        fireParam();
+    }
+}
+
+void ButtonsModel::reconcileFromDaemon(int row) {
+    if (!_live || !validRow(row))
+        return;
+    const QString path = _rows.at(row).path;
+    // Chain the read-back off the in-flight SetAction reply (step 1) when present,
+    // so the probe runs AFTER the daemon created/cleared the .Action.<X> interface
+    // — not before it lands (which would race and wrongly read the OLD binding). For
+    // param-less actions (setAction / restoreDefault / clearAction) this is the only
+    // reconcile; for parametric actions performParamCall reconciles after step 2 and
+    // passes through doReconcile directly, so it never double-probes prematurely.
+    QDBusPendingCallWatcher* setActionWatcher = _pendingSetAction.value(path, nullptr);
+    if (setActionWatcher != nullptr) {
+        connect(setActionWatcher, &QDBusPendingCallWatcher::finished, this,
+                [this, path](QDBusPendingCallWatcher*) {
+                    const int r = rowForPath(path);
+                    if (r >= 0)
+                        doReconcile(r);
+                });
+    } else {
+        doReconcile(row);
+    }
+}
+
+int ButtonsModel::rowForPath(const QString& path) const {
+    for (int i = 0; i < _rows.size(); ++i)
+        if (_rows.at(i).path == path)
+            return i;
+    return -1;
+}
+
+void ButtonsModel::doReconcile(int row) {
+    if (!_live || !validRow(row))
+        return;
+    const QString path = _rows.at(row).path;
+    // Re-probe which .Action.<X> interface is present at the button node (the same
+    // discovery enumerate() uses) and reconcile the row to it, so the binding list
+    // reflects the daemon's REAL applied action rather than the optimistic guess.
+    // Done async so it does not block; the optimistic update stays for snappiness.
+    auto* props = new QDBusInterface(
+        kService, path, QStringLiteral("org.freedesktop.DBus.Properties"), _bus, this);
+    // Probe each candidate action interface in turn via GetAll; the first that
+    // resolves is the present binding. We chain sequentially to keep ordering
+    // deterministic and avoid a burst of parallel calls.
+    auto* index = new int(0);
+    auto* self = this;
+    auto runner = std::make_shared<std::function<void()>>();
+    *runner = [self, props, path, index, runner]() {
+        // Skip "None" (it is the absence of any .Action.<X>); reaching the end
+        // means no action interface is present -> the button is "None"/default.
+        while (*index < static_cast<int>(sizeof(kActionTypes) / sizeof(kActionTypes[0])) &&
+               qstrcmp(kActionTypes[*index], "None") == 0) {
+            ++(*index);
+        }
+        if (*index >= static_cast<int>(sizeof(kActionTypes) / sizeof(kActionTypes[0]))) {
+            // No present action interface: daemon reports no action (un-diverted
+            // default OR disabled). Only correct the row if it optimistically
+            // claimed a concrete action that did NOT take. Preserve the user-facing
+            // "Default (native)" vs "Disabled" distinction the optimistic update set
+            // (the daemon cannot tell them apart over D-Bus — both carry no action).
+            const int r = self->rowForPath(path);
+            if (r >= 0) {
+                const QString cur = self->_rows.at(r).currentActionType;
+                if (cur != QLatin1String("None") && cur != QLatin1String("Default")) {
+                    self->applyCurrentAction(r, QStringLiteral("None"),
+                                             QObject::tr("Disabled"));
+                }
+            }
+            props->deleteLater();
+            delete index;
+            return;
+        }
+        const QString type = QString::fromUtf8(kActionTypes[*index]);
+        const QString iface = QStringLiteral("pizza.pixl.LogiOps.Action.") + type;
+        auto pending = props->asyncCall(QStringLiteral("GetAll"), iface);
+        auto* w = new QDBusPendingCallWatcher(pending, self);
+        QObject::connect(w, &QDBusPendingCallWatcher::finished, self,
+                [self, props, path, index, iface, type, runner](QDBusPendingCallWatcher* watcher) {
+                    QDBusPendingReply<QVariantMap> reply = *watcher;
+                    watcher->deleteLater();
+                    if (!reply.isError()) {
+                        // This interface is present -> the real applied action.
+                        const int r = self->rowForPath(path);
+                        if (r >= 0 &&
+                            self->_rows.at(r).currentActionType != type) {
+                            self->applyCurrentAction(r, type,
+                                                     defaultSummary(type));
+                        }
+                        props->deleteLater();
+                        delete index;
+                        return;
+                    }
+                    ++(*index);
+                    (*runner)();
+                });
+    };
+    (*runner)();
 }
 
 void ButtonsModel::enumerate() {

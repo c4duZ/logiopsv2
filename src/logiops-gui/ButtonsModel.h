@@ -27,6 +27,8 @@
 #include <QStringList>
 #include <QVector>
 
+QT_FORWARD_DECLARE_CLASS(QDBusPendingCallWatcher)
+
 namespace logiops_gui {
 
 class ConfigState;
@@ -125,9 +127,21 @@ public:
     // host so QML can surface the rejection.
     Q_INVOKABLE bool setChangeHost(int row, const QString& host);
     Q_INVOKABLE void setChangeProfile(int row, const QString& name);
+    // Mouse-button re-emit (middle/back/forward/...). The daemon has no dedicated
+    // mouse-button action, but BTN_* are EV_KEY codes the InputDevice already
+    // registers, so this routes through the proven Keypress path:
+    // SetAction("Keypress") + SetKeys(["BTN_MIDDLE"]). btnName is one of the
+    // BTN_* evdev names; the summary renders a human label ("Middle click").
+    Q_INVOKABLE void setMouseButton(int row, const QString& btnName);
     // Param-less convenience wrappers.
     Q_INVOKABLE void setToggleSmartShift(int row);
     Q_INVOKABLE void setToggleHiresScroll(int row);
+    // Restore the button's NATIVE hardware function by UN-DIVERTING it:
+    // SetAction("Default") -> the daemon's makeAction resets the config (no action),
+    // RemapButton clears the TemporaryDiverted bit so the device handles the control
+    // itself. This is DISTINCT from clearAction("None"), which keeps the button
+    // diverted-but-inert (dead). Restore default = button works normally again.
+    Q_INVOKABLE void restoreDefault(int row); // SetAction("Default") -> un-divert
     Q_INVOKABLE void clearAction(int row); // SetAction("None") -> "Disabled"
 
     // --- Test / construction seam. ---
@@ -160,17 +174,38 @@ protected:
     // (so the binding list reflects the reassign immediately, live-apply model).
     void applyCurrentAction(int row, const QString& type, const QString& summary);
 
+    // Read back the button's ACTUAL present .Action.<X> interface from the daemon
+    // and reconcile the row to it — so the binding list reflects what the daemon
+    // really applied, not the optimistic guess (fixes the optimistic-only lie). The
+    // optimistic update stays for snappiness; this corrects it when the read lands.
+    // Virtual so the recording test subclass can no-op it (no live bus).
+    virtual void reconcileFromDaemon(int row);
+
     [[nodiscard]] bool validRow(int row) const { return row >= 0 && row < _rows.size(); }
+
+    // Find the row index for a button object-path (the async chains capture the
+    // path, not the row, since rows can be reset by enumerate between dispatch and
+    // reply). Returns -1 when no row matches.
+    [[nodiscard]] int rowForPath(const QString& path) const;
 
     QVector<ButtonInfo> _rows;
     int _hostCount = 3; // overwritten by setHostCount() from DeviceController (HOST-01).
 
 private:
     void enumerate(); // live: async .Buttons.Enumerate()
+    // The live read-back body: async-probe the present .Action.<X> at the button
+    // node and correct the row. reconcileFromDaemon() schedules this after the
+    // relevant D-Bus reply lands; kept separate so the chaining stays in one place.
+    void doReconcile(int row);
 
     QString _devicePath;
     QDBusConnection _bus;
     bool _live = false;
+
+    // Tracks the in-flight SetAction (step 1) per button path so performParamCall
+    // (step 2) can chain off its ACTUAL reply (fire only on success) instead of a
+    // separate ordering-assuming GetAll probe. Cleared when the watcher resolves.
+    QHash<QString, QDBusPendingCallWatcher*> _pendingSetAction;
 
     // CONF-01 dirty-tracker (WR-03). Not owned; may be null (test path).
     ConfigState* _configState = nullptr;

@@ -28,7 +28,7 @@ Rectangle {
     // The current row's data (read live from the model so the accent dot tracks
     // reassigns). Guarded for row == -1 (panel closing).
     function roleData(roleOffset) {
-        if (!buttonsModel || row < 0 || row >= buttonsModel.rowCount())
+        if (!buttonsModel || row < 0 || row >= buttonsModel.count)
             return undefined;
         return buttonsModel.data(buttonsModel.index(row, 0), Qt.UserRole + roleOffset);
     }
@@ -152,6 +152,44 @@ Rectangle {
                         } else if (root.buttonsModel) {
                             root.buttonsModel.setKeypress(root.row, names);
                         }
+                    }
+                }
+
+                // 1b) Mouse button (Options+ parity) — re-emit Middle/Back/Forward
+                // (and Left/Right) on this control. Routed through the daemon's
+                // existing Keypress action with BTN_* evdev names (no daemon change:
+                // BTN_* are EV_KEY codes the InputDevice already registers). The
+                // accent dot can't distinguish a mouse-button Keypress from a normal
+                // keystroke (both report .Action.Keypress), so it is not lit here.
+                CategoryRow {
+                    label: qsTr("Mouse button")
+                    glyph: "qrc:/logiops/gui/icons/keystroke.svg"
+                    onChosen: root.expanded = (root.expanded === "MouseButton" ? "" : "MouseButton")
+                }
+                Flow {
+                    Layout.fillWidth: true
+                    visible: root.expanded === "MouseButton"
+                    spacing: Theme.spacingSm
+
+                    Button {
+                        text: qsTr("Middle click")
+                        onClicked: if (root.buttonsModel) root.buttonsModel.setMouseButton(root.row, "BTN_MIDDLE")
+                    }
+                    Button {
+                        text: qsTr("Back")
+                        onClicked: if (root.buttonsModel) root.buttonsModel.setMouseButton(root.row, "BTN_BACK")
+                    }
+                    Button {
+                        text: qsTr("Forward")
+                        onClicked: if (root.buttonsModel) root.buttonsModel.setMouseButton(root.row, "BTN_FORWARD")
+                    }
+                    Button {
+                        text: qsTr("Right click")
+                        onClicked: if (root.buttonsModel) root.buttonsModel.setMouseButton(root.row, "BTN_RIGHT")
+                    }
+                    Button {
+                        text: qsTr("Left click")
+                        onClicked: if (root.buttonsModel) root.buttonsModel.setMouseButton(root.row, "BTN_LEFT")
                     }
                 }
 
@@ -303,12 +341,40 @@ Rectangle {
                     }
                 }
 
-                // 8) None (Disabled) — clears the binding.
+                // 8) Restore default — UN-DIVERT the control so the device handles
+                // it natively again (e.g. middle button does a real middle click).
+                // This is SetAction("Default"), NOT "None": "Disabled" below keeps
+                // the button diverted-but-inert (does nothing); "Restore default"
+                // gives the button back its normal hardware function.
+                CategoryRow {
+                    label: qsTr("Restore default")
+                    glyph: "qrc:/logiops/gui/icons/disabled.svg"
+                    active: root.currentType === "Default"
+                    onChosen: if (root.buttonsModel) root.buttonsModel.restoreDefault(root.row)
+                }
+                Text {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Theme.spacingSm
+                    text: qsTr("The button works as its normal hardware function.")
+                    font.pixelSize: Theme.labelSize
+                    color: Theme.mutedForeground
+                    wrapMode: Text.WordWrap
+                }
+
+                // 9) None (Disabled) — divert + do nothing (button becomes dead).
                 CategoryRow {
                     label: qsTr("Disabled")
                     glyph: "qrc:/logiops/gui/icons/disabled.svg"
                     active: root.currentType === "None"
                     onChosen: if (root.buttonsModel) root.buttonsModel.clearAction(root.row)
+                }
+                Text {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Theme.spacingSm
+                    text: qsTr("The button does nothing (not even its default action).")
+                    font.pixelSize: Theme.labelSize
+                    color: Theme.mutedForeground
+                    wrapMode: Text.WordWrap
                 }
             }
         }
