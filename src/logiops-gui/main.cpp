@@ -21,6 +21,7 @@
 #include "DeviceController.h"
 #include "DeviceControllerFactory.h"
 #include "DeviceModel.h"
+#include "GestureActions.h"
 #include "KeyNameMapper.h"
 
 #include <QDBusConnection>
@@ -87,6 +88,11 @@ int main(int argc, char* argv[]) {
     controllerFactory.setConfigState(&configState);
     // BTN-02 key-capture -> evdev names bridge (static mapper exposed to QML).
     KeyNameBridge keyNames;
+    // Predefined Options+-style gesture action provider (260531-gmt): a static,
+    // categorized list of keystroke combos QML offers instead of raw key capture
+    // for gesture actions. The chosen action's keys flow to the existing
+    // GestureModel::setGestureKeypress. QML renders only.
+    logiops_gui::GestureActions gestureActions;
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty(QStringLiteral("deviceModel"), &model);
@@ -95,6 +101,8 @@ int main(int argc, char* argv[]) {
                                              &controllerFactory);
     engine.rootContext()->setContextProperty(QStringLiteral("configState"), &configState);
     engine.rootContext()->setContextProperty(QStringLiteral("keyNames"), &keyNames);
+    engine.rootContext()->setContextProperty(QStringLiteral("gestureActions"),
+                                             &gestureActions);
 
     // Load the shell from the qt_add_qml_module resource. Qt 6.4.2 has no
     // QQmlApplicationEngine::loadFromModule (that is 6.5+), so load the module's

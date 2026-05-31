@@ -73,6 +73,7 @@ target_sources(logiops-gui-lib PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/ProfilesModel.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/ConfigState.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/GestureModel.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/GestureActions.cpp
         ${GUI_DBUS_SRCS})
 # Qt6::Gui for QGuiApplication::clipboard() (the access-denied Copy CTA). The lib
 # stays free of Qt6::Quick/Qml so the model/connection unit test links lean.
