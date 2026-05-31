@@ -80,9 +80,24 @@ void ChangeHostAction::setHost(std::string host) {
     std::unique_lock lock(_config_mutex);
     if (host == "next" || host == "prev" || host == "previous") {
         _config.host = std::move(host);
-    } else {
-        _config.host = std::stoi(host);
+        return;
     }
+    // SetHost is reachable over D-Bus by a non-root caller (CR-01). Never run
+    // std::stoi on the untrusted string directly: it throws std::invalid_argument
+    // on a non-numeric value and std::out_of_range on an oversized one, and an
+    // uncaught throw out of the ipcgull dispatch destabilizes the root daemon.
+    // Parse defensively and surface a marshalled D-Bus error instead.
+    int parsed;
+    try {
+        std::size_t consumed = 0;
+        parsed = std::stoi(host, &consumed);
+        if (consumed != host.size()) // reject trailing junk ("3a", "3 ", ...)
+            throw std::invalid_argument(host);
+    } catch (const std::exception&) {
+        throw std::invalid_argument(
+                "ChangeHost: host must be a number or next/prev/previous");
+    }
+    _config.host = parsed;
 }
 
 void ChangeHostAction::press() {
@@ -95,6 +110,11 @@ void ChangeHostAction::release() {
         run_task([self_weak = self<ChangeHostAction>(), host = _config.host.value()] {
             if (auto self = self_weak.lock()) {
                 auto host_info = self->_change_host->getHostInfo();
+                // hostCount is a device-reported uint8_t; a value of 0 (odd or
+                // transient device read) would make the modulo below an integer
+                // division by zero -> SIGFPE in the root daemon (CR-02).
+                if (host_info.hostCount == 0)
+                    return;
                 int next_host;
                 if (std::holds_alternative<std::string>(host)) {
                     const auto& host_str = std::get<std::string>(host);
@@ -107,9 +127,13 @@ void ChangeHostAction::release() {
                 } else {
                     next_host = std::get<int>(host) - 1;
                 }
-                next_host %= host_info.hostCount;
+                // C++ % follows the dividend's sign, so "prev" from host 0 yields
+                // -1 and would send host 255. Use a non-negative modulo so the
+                // intended wrap-around (prev from 0 -> last host) happens.
+                const int count = host_info.hostCount;
+                next_host = ((next_host % count) + count) % count;
                 if (next_host != host_info.currentHost)
-                    self->_change_host->setHost(next_host);
+                    self->_change_host->setHost(static_cast<uint8_t>(next_host));
             }
         });
     }
