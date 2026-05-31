@@ -424,7 +424,16 @@ ColumnLayout {
 
         Text {
             id: pillText
-            anchors.centerIn: parent
+            // Constrain to the pill width (it is Layout.fillWidth in the column),
+            // wrapping the long mode labels ("Do once when moved far enough")
+            // instead of letting them clip past the pill / panel edge when narrow.
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: Theme.spacingMd
+            anchors.rightMargin: Theme.spacingMd
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
             text: pill.label
             font.pixelSize: Theme.bodySize
             font.weight: pill.selected ? Theme.weightMedium : Theme.weightRegular

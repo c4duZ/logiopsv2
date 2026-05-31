@@ -319,9 +319,14 @@ Rectangle {
         Row {
             anchors.left: parent.left
             anchors.leftMargin: Theme.spacingSm
+            // Leave room for the accent dot on the right so a long label elides
+            // before it would clip past the panel edge (narrow-window safe).
+            anchors.right: parent.right
+            anchors.rightMargin: Theme.spacingLg
             anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.spacingSm
             Image {
+                id: catGlyph
                 anchors.verticalCenter: parent.verticalCenter
                 width: 20; height: 20
                 sourceSize.width: 20; sourceSize.height: 20
@@ -329,9 +334,13 @@ Rectangle {
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
+                // Bound the label to the remaining row width so it elides instead
+                // of overflowing the panel when the window is narrow.
+                width: parent.width - catGlyph.width - parent.spacing
                 text: label
                 font.pixelSize: Theme.bodySize
                 color: Theme.foreground
+                elide: Text.ElideRight
             }
         }
         // Accent dot marks the current action (UI-SPEC).
