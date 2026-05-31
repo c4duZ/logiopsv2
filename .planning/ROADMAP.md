@@ -97,7 +97,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. User can set granularity so one gesture maps to exactly one discrete step (one volume tick, one desktop switch)
   3. User can make a gesture repeat per interval (e.g. switch several desktops in one continuous motion)
   4. The gesture UI explains in plain language when and how often the action will fire
-**Plans**: TBD
+**Plans**: 4 plans
+  - [ ] 04-00-PLAN.md — Wave 0: tests/phase4 CTest harness + RED gesture_math (GEST-02/03 accounting) + RED GestureModel scaffold (GEST-01/04)
+  - [ ] 04-01-PLAN.md — Daemon: fix IntervalGesture granularity defect + defaults::gesture_interval + harden setGesture against untrusted input (GEST-02, GEST-03)
+  - [ ] 04-02-PLAN.md — GUI brain: GestureModel two-step mode-switch + mode allowlist + preview sentence + granularity readout + typed Action.Gesture proxy (GEST-01..04)
+  - [ ] 04-03-PLAN.md — GUI: GestureBuilder.qml (direction cross/mode pills/action/granularity/preview) + Theme tokens/glyphs + ReassignPanel category + on-hardware UAT (GEST-01..04)
 **UI hint**: yes
 **Research flag**: This is the first C++ daemon extension — confirm the magnitude/repetition/granularity abstraction over existing `axis_multiplier`/`threshold`/`interval` and fix uinput recreate-per-code churn while in this code.
 
@@ -169,7 +173,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Access Path & Daemon Hardening | 6/6 | Complete    | 2026-05-30 |
 | 2. D-Bus Client & Device List | 5/5 | Complete    | 2026-05-30 |
 | 3. Core Config UI & Persistence | 0/5 | Not started | - |
-| 4. Fine-Grained Gesture Control | 0/TBD | Not started | - |
+| 4. Fine-Grained Gesture Control | 0/4 | Not started | - |
 | 5. Per-Application Profiles & Profile Sharing | 0/TBD | Not started | - |
 | 6. Action Wheel | 0/TBD | Not started | - |
 | 7. Smart Actions / Macros | 0/TBD | Not started | - |
