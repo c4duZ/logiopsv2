@@ -134,13 +134,20 @@ ColumnLayout {
             font.weight: Theme.weightMedium
             color: Theme.foreground
         }
-        Flow {
+        // Mode options as a full-width vertical list. A Flow (positioner) inside a
+        // ColumnLayout collapses to height 0 — the Layout never allocates vertical
+        // space for the positioner's wrapped content. A ColumnLayout of fillWidth
+        // pills lays out reliably and reads better for the long mode labels.
+        ColumnLayout {
             Layout.fillWidth: true
             spacing: Theme.spacingSm
             Repeater {
+                id: pillRepeater
                 model: root.gestureModel ? root.gestureModel.plainModes() : []
                 delegate: ModePill {
                     required property string modelData
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Theme.controlRowHeight
                     label: modelData
                     selected: root.activeMode === modelData
                     onChosen: if (root.gestureModel) root.gestureModel.setMode(root.activeDirection, modelData)
