@@ -27,6 +27,13 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+// Full definition (not a forward declaration): the Q_INVOKABLE
+// gestureModelForButton() returns GestureModel*, and moc only emits/registers
+// the GestureModel* metatype — needed for QML to resolve the method's return
+// type — when the complete type is visible here. Forward-declaring it produces
+// the runtime "Unknown method return type: logiops_gui::GestureModel*" QML error.
+#include "GestureModel.h"
+
 class PizzaPixlLogiOpsDPIInterface;
 class PizzaPixlLogiOpsSmartShiftInterface;
 class PizzaPixlLogiOpsHiresScrollInterface;
@@ -36,7 +43,6 @@ class PizzaPixlLogiOpsButtonsInterface;
 namespace logiops_gui {
 
 class ConfigState;
-class GestureModel;
 
 /*
  * DeviceController — the per-device C++<->QML bridge for the Phase 3 config UI.
