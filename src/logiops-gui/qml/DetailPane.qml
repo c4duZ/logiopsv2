@@ -64,7 +64,11 @@ Rectangle {
     // hands it the path on selection change.
     function syncController() {
         var it = pane.selectedItem();
-        deviceControllerFactory.selectDevice(it ? it.rPath : "");
+        var path = it ? it.rPath : "";
+        deviceControllerFactory.selectDevice(path);
+        // Point the global ConfigState's restore target at the selected device
+        // (.Device.ClearProfile for Restore-defaults, CONF-02).
+        configState.setDevicePath(path);
     }
     onCurrentIndexChanged: syncController()
     Component.onCompleted: syncController()
@@ -159,6 +163,16 @@ Rectangle {
         }
 
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.hairline }
+
+        // --- Persistent persistence toolbar (CONF-01 / CONF-02): the unsaved pill,
+        // the async polkit-gated Save CTA, and the Restore-defaults entry. Sits
+        // ABOVE the tabs so it is always reachable while editing any tab (UI-SPEC). ---
+        SaveToolbar {
+            Layout.fillWidth: true
+            deviceName: { var it = pane.selectedItem(); return it ? it.rName : ""; }
+            activeProfile: deviceControllerFactory.profilesModel
+                ? deviceControllerFactory.profilesModel.activeProfile : ""
+        }
 
         // --- Sliding TabBar (UI-SPEC: tabBarHeight 48, 2px accent underline that
         // slides between tabs, motionBase/OutCubic; selected = accent DemiBold,

@@ -112,6 +112,8 @@ qt_add_qml_module(logiops-gui
             qml/config/DpiCycleEditor.qml
             qml/config/ScrollTab.qml
             qml/config/ProfilesTab.qml
+            qml/config/SaveToolbar.qml
+            qml/config/RestoreDialog.qml
             qml/states/EmptyState.qml
             qml/states/LoadingState.qml
             qml/states/DaemonDownState.qml

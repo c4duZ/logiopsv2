@@ -55,16 +55,17 @@ Item {
                 // Real content for implemented tabs; placeholder label otherwise.
                 readonly property bool implemented:
                     modelData === "buttons" || modelData === "pointer"
-                    || modelData === "scroll"
+                    || modelData === "scroll" || modelData === "profiles"
                 Loader {
                     anchors.fill: parent
                     active: tabBody.implemented
                     sourceComponent: {
                         switch (tabBody.modelData) {
-                        case "buttons": return buttonsTabComponent;
-                        case "pointer": return pointerTabComponent;
-                        case "scroll":  return scrollTabComponent;
-                        default:        return null;
+                        case "buttons":  return buttonsTabComponent;
+                        case "pointer":  return pointerTabComponent;
+                        case "scroll":   return scrollTabComponent;
+                        case "profiles": return profilesTabComponent;
+                        default:         return null;
                         }
                     }
                 }
@@ -72,12 +73,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     visible: !tabBody.implemented
-                    text: {
-                        switch (tabBody.modelData) {
-                        case "profiles": return qsTr("Profiles");
-                        default:         return tabBody.modelData;
-                        }
-                    }
+                    text: tabBody.modelData
                     color: Theme.mutedForeground
                     font.pixelSize: Theme.bodySize
                 }
@@ -110,6 +106,16 @@ Item {
         id: scrollTabComponent
         ScrollTab {
             controller: root.controller
+        }
+    }
+
+    // The Profiles tab content (PROF-01): manual profile create/name/switch over the
+    // per-device ProfilesModel, bound to the factory's swapped-in model.
+    Component {
+        id: profilesTabComponent
+        ProfilesTab {
+            controller: root.controller
+            profilesModel: deviceControllerFactory.profilesModel
         }
     }
 }
