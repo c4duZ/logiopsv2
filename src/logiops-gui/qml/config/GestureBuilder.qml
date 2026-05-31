@@ -238,6 +238,12 @@ ColumnLayout {
                 Slider {
                     id: granSlider
                     Layout.fillWidth: true
+                    // The custom handle/background Rectangles carry no implicitHeight,
+                    // so the Slider's own interactive area collapsed to ~0px tall —
+                    // the handle rendered but could not be grabbed/dragged. Give the
+                    // control an explicit height so its hit area matches the visual.
+                    implicitHeight: 24
+                    Layout.preferredHeight: 24
                     from: 0
                     to: 200
                     stepSize: 1
