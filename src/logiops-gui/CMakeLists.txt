@@ -115,6 +115,7 @@ qt_add_qml_module(logiops-gui
             qml/config/DeviceRender.qml
             qml/config/BindingList.qml
             qml/config/ReassignPanel.qml
+            qml/config/GestureBuilder.qml
             qml/config/KeyCaptureField.qml
             qml/config/PointerTab.qml
             qml/config/DpiCycleEditor.qml
@@ -139,6 +140,8 @@ qt_add_qml_module(logiops-gui
             icons/hires.svg
             icons/thumbwheel.svg
             icons/disabled.svg
+            icons/gesture.svg
+            icons/arrow.svg
             icons/save.svg
             icons/restore.svg
             icons/add.svg

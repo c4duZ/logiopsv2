@@ -49,6 +49,11 @@ QtObject {
     readonly property int hotspotMin: 32       // min hotspot (>=44 effective via padding).
     readonly property int dialogMaxWidth: 440  // confirm dialogs.
 
+    // --- Phase 4 layout token (UI-SPEC "New layout tokens"). ADD only. ---
+    // Each of the 4 cardinal cells in the gesture direction cross. >=44px hit
+    // target; the corners + center of the 3x3 grid are inert.
+    readonly property int gestureDirCell: 44
+
     // --- Typography (exactly 4 sizes, exactly 2 weights). UI-SPEC. ---
     readonly property int displaySize: 28
     readonly property int headingSize: 20
@@ -77,6 +82,12 @@ QtObject {
     readonly property color hoverTint: Qt.rgba(foreground.r, foreground.g, foreground.b, 0.06)
     // 12% destructive tint for destructive dialog accent strips / icon bg.
     readonly property color destructiveTint: Qt.rgba(destructive.r, destructive.g, destructive.b, 0.12)
+
+    // --- Phase 4 semantic alias (UI-SPEC "New tokens"). Zero new hues. ---
+    // The small accent dot on a direction cell whose gesture is not "Nothing", so
+    // all 4 directions read their configured/empty state at a glance. A NAMED
+    // ALIAS of `accent` for executor clarity — no new color is introduced.
+    readonly property color gestureConfigured: accent
 
     // --- Motion budget: 120-250ms, ease-out, no overshoot. UI-SPEC. ---
     readonly property int motionFast: 150

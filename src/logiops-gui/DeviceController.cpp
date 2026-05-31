@@ -19,6 +19,7 @@
 #include "DeviceController.h"
 
 #include "ConfigState.h"
+#include "GestureModel.h"
 #include "ipc_defs.h"
 #include "logid_dpi_proxy.h"
 #include "logid_smartshift_proxy.h"
@@ -425,6 +426,32 @@ void DeviceController::setThumbInvert(bool invert) {
     if (_thumbProxy != nullptr)
         _thumbProxy->SetInvert(invert);
     markDirty();
+}
+
+GestureModel* DeviceController::gestureModelForButton(const QString& buttonPath) {
+    // GEST-01: lazily build + cache the button-scoped gesture brain. Re-point it
+    // when a different button's Gesture category opens (one model in flight; the
+    // panel only edits one button at a time). The same ConfigState is injected so
+    // every gesture edit flips the inherited "Unsaved changes" pill (no new Save
+    // path). Empty path -> no model.
+    if (buttonPath.isEmpty())
+        return nullptr;
+    if (_gestureModel != nullptr && _gesturePath == buttonPath)
+        return _gestureModel;
+
+    if (_gestureModel != nullptr) {
+        _gestureModel->deleteLater();
+        _gestureModel = nullptr;
+    }
+    _gesturePath = buttonPath;
+    if (_live) {
+        _gestureModel = new GestureModel(buttonPath, _bus, this);
+    } else {
+        // Headless/test path: a no-bus model the QML can still bind/drive.
+        _gestureModel = new GestureModel(this);
+    }
+    _gestureModel->setConfigState(_configState);
+    return _gestureModel;
 }
 
 void DeviceController::setThumbTap(const QString& type) {

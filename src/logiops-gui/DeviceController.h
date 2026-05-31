@@ -36,6 +36,7 @@ class PizzaPixlLogiOpsButtonsInterface;
 namespace logiops_gui {
 
 class ConfigState;
+class GestureModel;
 
 /*
  * DeviceController — the per-device C++<->QML bridge for the Phase 3 config UI.
@@ -163,6 +164,17 @@ public:
     // typed and deferred to Phase 4 (CONTEXT).
     Q_INVOKABLE void setThumbTap(const QString& type);
 
+    // GEST-01: hand QML a button-scoped GestureModel for the .../buttons/M node
+    // the reassign panel is editing. The gesture builder binds the returned
+    // model's previewSentence/activeDirection and calls setMode/setGranularity/
+    // setGestureAction on it (QML renders only). The controller OWNS the model:
+    // it is lazily constructed, cached per button path, and re-pointed when a
+    // different button's Gesture category opens, so it always targets the right
+    // node. The same ConfigState is injected so every gesture edit dirties the
+    // inherited "Unsaved changes" pill (no second Save path). Returns nullptr for
+    // an empty path. The pointer is owned by this controller (QML must not delete).
+    Q_INVOKABLE logiops_gui::GestureModel* gestureModelForButton(const QString& buttonPath);
+
     // --- Test / construction seams (also reused by the live path). ---
     // Apply a present-interface set (the parsed Introspect result, or an injected
     // fake) and rebuild proxies + capability flags. Emits capabilitiesChanged.
@@ -230,6 +242,12 @@ private:
     PizzaPixlLogiOpsHiresScrollInterface* _hiresProxy = nullptr;
     PizzaPixlLogiOpsThumbWheelInterface* _thumbProxy = nullptr;
     PizzaPixlLogiOpsButtonsInterface* _buttonsProxy = nullptr;
+
+    // GEST-01: the button-scoped gesture builder brain for the currently edited
+    // button. Owned (QObject child); re-created when a different button's Gesture
+    // category opens so it always targets the right .../buttons/M node.
+    GestureModel* _gestureModel = nullptr;
+    QString _gesturePath; // the button path _gestureModel is scoped to.
 
     // Capability cache.
     bool _hasTorque = false;

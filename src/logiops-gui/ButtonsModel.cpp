@@ -41,7 +41,7 @@ namespace {
     // binding (BTN-04) and to gate setAction types.
     const char* kActionTypes[] = {
         "Keypress", "ChangeDPI", "CycleDPI", "ChangeHost", "ChangeProfile",
-        "ToggleSmartShift", "ToggleHiresScroll", "None",
+        "ToggleSmartShift", "ToggleHiresScroll", "Gesture", "None",
     };
 
     // Human one-liner for the binding list (BTN-04). Parametric summaries are
@@ -89,6 +89,7 @@ QVariant ButtonsModel::data(const QModelIndex& index, int role) const {
         case CurrentActionTypeRole:   return b.currentActionType;
         case CurrentActionSummaryRole:return b.currentActionSummary;
         case ButtonNameRole:          return b.name;
+        case ButtonPathRole:          return b.path;
         default:                      return {};
     }
 }
@@ -102,6 +103,7 @@ QHash<int, QByteArray> ButtonsModel::roleNames() const {
         {CurrentActionTypeRole,    "currentActionType"},
         {CurrentActionSummaryRole, "currentActionSummary"},
         {ButtonNameRole,           "buttonName"},
+        {ButtonPathRole,           "buttonPath"},
     };
 }
 

@@ -79,6 +79,7 @@ public:
         CurrentActionTypeRole,    // e.g. "Keypress", "ChangeHost", "None"
         CurrentActionSummaryRole, // human one-liner, e.g. "Ctrl + C", "Host 2"
         ButtonNameRole,           // display label, e.g. "Button (CID 0x52)"
+        ButtonPathRole,           // the .../buttons/M object path (gesture scope)
     };
     Q_ENUM(Roles)
 
