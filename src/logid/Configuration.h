@@ -32,6 +32,10 @@ namespace logid {
         static constexpr double io_timeout = 500;
         static constexpr int workers = 4;
         static constexpr int gesture_threshold = 50;
+        // Leftmost granularity-slider stop; tuned on-hardware (MX Master 4) by UAT
+        // so one flick is roughly one step. Used when an OnInterval gesture has no
+        // explicit interval so it repeats sensibly instead of never firing (GEST-03).
+        static constexpr int gesture_interval = 120;
     }
 
     class Configuration : public config::Config {

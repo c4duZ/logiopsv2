@@ -31,7 +31,7 @@ IntervalGesture::IntervalGesture(
                 {
                         {"GetConfig", {this, &IntervalGesture::getConfig, {"interval", "threshold"}}},
                         {"SetInterval", {this, &IntervalGesture::setInterval, {"interval"}}},
-                        {"SetThreshold", {this, &IntervalGesture::setThreshold, {"interval"}}},
+                        {"SetThreshold", {this, &IntervalGesture::setThreshold, {"threshold"}}},
                         {"SetAction", {this, &IntervalGesture::setAction, {"type"}}}
                 },
                 {},
@@ -62,7 +62,11 @@ void IntervalGesture::release([[maybe_unused]] bool primary) {
 
 void IntervalGesture::move(int16_t axis) {
     std::shared_lock lock(_config_mutex);
-    if (!_config.interval.has_value())
+    // GEST-03: an unset interval falls back to the sane default so the gesture
+    // still repeats instead of never firing. Guard interval <= 0 to avoid a
+    // divide-by-zero (untrusted/sentinel values arrive over D-Bus, T-04-01-04).
+    const int interval = _config.interval.value_or(defaults::gesture_interval);
+    if (interval <= 0)
         return;
 
     const auto threshold =
@@ -71,7 +75,7 @@ void IntervalGesture::move(int16_t axis) {
     if (_axis < threshold)
         return;
 
-    int32_t new_interval_count = (_axis - threshold) / _config.interval.value();
+    int32_t new_interval_count = (_axis - threshold) / interval;
     if (new_interval_count > _interval_pass_count) {
         if (_action) {
             _action->press();
