@@ -105,12 +105,20 @@ Rectangle {
 
         // --- Categorized action list (CONTEXT order). ---
         ScrollView {
+            id: catScroll
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            // Bound the content to the viewport width so it NEVER overflows
+            // horizontally: a ScrollView's contentItem otherwise sizes to its
+            // children's implicit width, so the inner ColumnLayout + its fillWidth
+            // rows (mode pills, action button, preview) rendered wider than the
+            // panel and clipped off the right edge. availableWidth is the viewport
+            // minus any vertical scrollbar.
+            contentWidth: availableWidth
 
             ColumnLayout {
-                width: parent.width
+                width: catScroll.availableWidth
                 spacing: Theme.spacingSm
 
                 // 1) Keystroke (BTN-02).
