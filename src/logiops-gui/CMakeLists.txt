@@ -117,6 +117,7 @@ qt_add_qml_module(logiops-gui
             qml/config/BindingList.qml
             qml/config/ReassignPanel.qml
             qml/config/GestureBuilder.qml
+            qml/config/GesturePicker.qml
             qml/config/KeyCaptureField.qml
             qml/config/PointerTab.qml
             qml/config/DpiCycleEditor.qml

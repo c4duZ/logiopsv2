@@ -117,11 +117,22 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Theme.spacingMd
 
+        // 260531-gmt: inline predefined-action picker state. pickerOpen toggles the
+        // GesturePicker; pickedActionLabel feeds the "Action: <label>" readout.
+        // Both reset on direction switch so a previous direction's choice never
+        // leaks into another direction's body.
+        property bool pickerOpen: false
+        property string pickedActionLabel: ""
+
         // Cross-fade the whole body when the direction changes (motionFast 150ms).
         opacity: 1.0
         Connections {
             target: root
-            function onActiveDirectionChanged() { bodyFade.restart(); }
+            function onActiveDirectionChanged() {
+                bodyFade.restart();
+                body.pickerOpen = false;
+                body.pickedActionLabel = "";
+            }
         }
         SequentialAnimation {
             id: bodyFade
@@ -164,8 +175,12 @@ ColumnLayout {
         readonly property bool showsGranularity: showsAction
                                                  || root.activeMode === qsTr("Adjust proportionally")
 
-        // --- 3 — ACTION SUB-SECTION (§3, GEST-01). Reuses the SAME categorized
-        // chooser as button reassignment (no parallel picker). ---
+        // --- 3 — ACTION SUB-SECTION (§3, GEST-01, 260531-gmt). Presents the
+        // PREDEFINED Options+-style action list (gestureActions provider) inline,
+        // so the user never needs to press a physical media/brightness key. The
+        // picker only applies to action-bearing modes (OnInterval/OnRelease) —
+        // showsAction already gates this section out for Axis. "Custom keystroke…"
+        // still routes to the existing raw capture via chooseActionRequested.
         ColumnLayout {
             Layout.fillWidth: true
             visible: body.showsAction
@@ -176,10 +191,32 @@ ColumnLayout {
                 font.weight: Theme.weightMedium
                 color: Theme.foreground
             }
+            // The "Choose what this direction does" trigger + the chosen-action
+            // readout. Tapping it toggles the inline predefined picker.
             Button {
                 Layout.fillWidth: true
-                text: qsTr("Choose what this direction does.")
-                onClicked: root.chooseActionRequested(root.activeDirection)
+                text: body.pickedActionLabel.length > 0
+                      ? qsTr("Action: %1").arg(body.pickedActionLabel)
+                      : qsTr("Choose what this direction does.")
+                onClicked: body.pickerOpen = !body.pickerOpen
+            }
+            // Inline predefined picker (width-constrained; not a modal). Selecting
+            // a predefined action binds it via the existing setGestureKeypress and
+            // records the label for the readout + preview. "Custom keystroke…"
+            // re-emits chooseActionRequested so ReassignPanel opens the raw capture.
+            GesturePicker {
+                Layout.fillWidth: true
+                visible: body.pickerOpen
+                onActionPicked: function (keys, label) {
+                    if (root.gestureModel)
+                        root.gestureModel.setGestureKeypress(root.activeDirection, keys);
+                    body.pickedActionLabel = label;
+                    body.pickerOpen = false;
+                }
+                onCustomRequested: {
+                    body.pickerOpen = false;
+                    root.chooseActionRequested(root.activeDirection);
+                }
             }
         }
 
