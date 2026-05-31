@@ -78,4 +78,9 @@ if(BUILD_TESTING)
     # Added after src/logiops-gui so the optional logiops-gui-lib target (which
     # the KeyNameMapper unit links) already exists when present.
     add_subdirectory(tests/phase3)
+    # Phase 4, Wave 0 test suite (GEST-02/03 gesture math + GEST-01/04 GestureModel
+    # scaffold), registered under the `phase4` CTest name prefix. Added after
+    # src/logiops-gui (like phase3) so the optional logiops-gui-lib target the
+    # GestureModel unit links exists when present.
+    add_subdirectory(tests/phase4)
 endif()
