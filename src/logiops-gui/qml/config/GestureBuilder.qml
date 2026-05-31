@@ -33,8 +33,11 @@ ColumnLayout {
     // re-binds when a cell is chosen.
     readonly property string activeDirection: gestureModel ? gestureModel.activeDirection : "up"
     // The active direction's current plain-language mode (drives progressive
-    // disclosure). Empty until a mode is chosen.
-    readonly property string activeMode: gestureModel ? gestureModel.modeOf(activeDirection) : ""
+    // disclosure). Empty until a mode is chosen. Bound to the NOTIFYable model
+    // property (NOT the bare modeOf() method) so the disclosure sections re-bind
+    // when the mode of the current direction changes, not only on direction switch
+    // (WR-02). The model emits previewChanged on setMode/setActiveDirection.
+    readonly property string activeMode: gestureModel ? gestureModel.activeMode : ""
 
     // Capitalized human label for a direction ("Up"/"Down"/"Left"/"Right").
     function dirLabel(d) {

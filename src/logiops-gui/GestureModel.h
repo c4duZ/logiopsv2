@@ -68,6 +68,12 @@ class GestureModel : public QObject {
                        NOTIFY activeDirectionChanged)
     // The active direction's granularity human readout ("~1 step per small flick").
     Q_PROPERTY(QString granularityReadout READ granularityReadout NOTIFY previewChanged)
+    // The active direction's current plain-language mode. NOTIFYable so the QML
+    // progressive-disclosure sections re-bind when the mode changes (WR-02): a
+    // bare modeOf() method binding goes stale because previewChanged is not one of
+    // its tracked dependencies. previewChanged fires on both setMode (when editing
+    // the active direction) and setActiveDirection, covering every transition.
+    Q_PROPERTY(QString activeMode READ activeMode NOTIFY previewChanged)
 
 public:
     // Live constructor: the BUTTON object-path (.../buttons/M) + the bus the GUI
@@ -98,6 +104,9 @@ public:
 
     [[nodiscard]] QString previewSentence() const;
     [[nodiscard]] QString granularityReadout() const;
+    // The active direction's plain-language mode (empty if unset). Backs the
+    // NOTIFYable activeMode property; same value modeOf(_active) returns.
+    [[nodiscard]] QString activeMode() const { return modeOf(_active); }
 
     // Query whether a direction has a non-"Nothing" gesture (the configured-dot).
     Q_INVOKABLE bool isConfigured(const QString& direction) const;
