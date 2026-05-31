@@ -46,7 +46,7 @@ AxisGesture::AxisGesture(Device* device, config::AxisGesture& config,
             try {
                 _input_axis = _device->virtualInput()->toAxisCode(axis);
             } catch (InputDevice::InvalidEventCode& e) {
-                logPrintf(WARN, "Invalid axis %s.");
+                logPrintf(WARN, "Invalid axis %s.", axis.c_str());
             }
         }
 

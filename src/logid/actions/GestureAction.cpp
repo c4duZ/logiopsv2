@@ -226,6 +226,11 @@ uint8_t GestureAction::reprogFlags() const {
 void GestureAction::setGesture(const std::string& direction, const std::string& type) {
     std::unique_lock lock(_config_mutex);
 
+    // Untrusted D-Bus input (group-logiops client → root daemon). toDirection
+    // allowlists {up,down,left,right,none} and throws std::invalid_argument on
+    // anything else; ipcgull marshals that to a clean D-Bus error rather than
+    // aborting the daemon (T-04-01-02). We deliberately do not swallow it: an
+    // invalid direction must be rejected, never silently mapped. No std::stoi.
     Direction d = toDirection(direction);
 
     auto it = _gestures.find(d);
@@ -240,6 +245,13 @@ void GestureAction::setGesture(const std::string& direction, const std::string& 
 
     auto dir_name = fromDirection(d);
 
+    // Lazily initialize the gestures map: a SetGesture issued right after
+    // Button.SetAction("Gesture") (before any gesture exists) would otherwise
+    // hit std::bad_optional_access on _config.gestures.value() and abort the
+    // root daemon (T-04-01-01, Pitfall 3).
+    if (!_config.gestures.has_value())
+        _config.gestures.emplace();
+
     auto& gesture = _config.gestures.value()[dir_name];
 
     _gestures[d].reset();
@@ -248,6 +260,10 @@ void GestureAction::setGesture(const std::string& direction, const std::string& 
                 _device, type, gesture,
                 _node->make_child(dir_name));
     } catch (InvalidGesture& e) {
+        // Untrusted type outside the makeGesture allowlist (T-04-01-03). Restore
+        // the node to a VALID interface via the config-driven makeGesture (not
+        // the rejected type string), then rethrow as a clean D-Bus error so the
+        // node is never left without a valid interface and the daemon never aborts.
         _gestures[d] = Gesture::makeGesture(
                 _device, gesture,
                 _node->make_child(dir_name));
