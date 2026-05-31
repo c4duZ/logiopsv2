@@ -42,6 +42,22 @@ Rectangle {
     }
     readonly property int hostCount: buttonsModel ? buttonsModel.hostCount : 3
 
+    // GEST-01: this button supports gestures (capability-gate the category —
+    // hidden, not greyed, when false). GestureSupportRole = UserRole + 4.
+    readonly property bool gestureSupport: {
+        var g = roleData(4);
+        return g === undefined ? false : g;
+    }
+    // The .../buttons/M object path the gesture model scopes to. ButtonPathRole
+    // = UserRole + 8.
+    readonly property string buttonPath: {
+        var p = roleData(8);
+        return p === undefined ? "" : p;
+    }
+    // The button-scoped GestureModel (Plan 02), owned by the controller and
+    // re-pointed per button. Built lazily when the Gesture category opens.
+    property var gestureModel: null
+
     // Local mode for the inline editors (which category is expanded).
     property string expanded: ""
 
@@ -203,7 +219,48 @@ Rectangle {
                     onChosen: if (root.buttonsModel) root.buttonsModel.setToggleHiresScroll(root.row)
                 }
 
-                // 7) None (Disabled) — clears the binding.
+                // 7) Gesture (GEST-01..04) — capability-gated; placed after
+                // "Hi-res toggle", before "Disabled" (UI-SPEC §Entry point).
+                // Hidden (not greyed) when the button has no gesture support.
+                CategoryRow {
+                    label: qsTr("Gesture")
+                    glyph: "qrc:/logiops/gui/icons/gesture.svg"
+                    visible: root.gestureSupport
+                    active: root.currentType === "Gesture"
+                    onChosen: {
+                        if (root.expanded === "Gesture") {
+                            root.expanded = "";
+                            return;
+                        }
+                        // Pitfall 3 sequence: SetAction("Gesture") FIRST so the daemon
+                        // builds the GestureAction (and its gestures map) before any
+                        // SetGesture runs; THEN build the button-scoped model + open.
+                        if (root.buttonsModel)
+                            root.buttonsModel.setAction(root.row, "Gesture");
+                        if (root.controller && root.buttonPath.length > 0)
+                            root.gestureModel = root.controller.gestureModelForButton(root.buttonPath);
+                        root.expanded = "Gesture";
+                    }
+                }
+                GestureBuilder {
+                    Layout.fillWidth: true
+                    visible: root.expanded === "Gesture"
+                    gestureModel: root.gestureModel
+                    // §Motion: 220ms height/opacity reveal (OutCubic).
+                    opacity: visible ? 1.0 : 0.0
+                    Behavior on opacity {
+                        NumberAnimation { duration: Theme.motionAdd; easing.type: Easing.OutCubic }
+                    }
+                    // Reuse the EXACT button-reassignment action chooser for the
+                    // gesture's per-direction action (no parallel picker): expand the
+                    // Keystroke category scoped to "the action this direction fires".
+                    // The chosen keystroke is forwarded to the gesture model.
+                    onChooseActionRequested: function (direction) {
+                        root.expanded = "Keypress";
+                    }
+                }
+
+                // 8) None (Disabled) — clears the binding.
                 CategoryRow {
                     label: qsTr("Disabled")
                     glyph: "qrc:/logiops/gui/icons/disabled.svg"
