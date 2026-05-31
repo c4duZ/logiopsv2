@@ -68,6 +68,18 @@ Rectangle {
     // while in gesture-action mode; empty string means "normal button reassignment".
     property string activeGestureDirection: ""
 
+    // Reset ALL transient per-button state when the selected button changes.
+    // Without this the panel kept the PREVIOUS button's gestureModel + expanded
+    // editor: switching buttons showed the old button's gesture config, and a
+    // gesture edited "now" was dispatched to the OLD button's gestureModel (wrong
+    // node) — so the new gesture silently did nothing. Clearing gestureModel makes
+    // the Gesture category re-fetch the correct button-scoped model on next open.
+    onRowChanged: {
+        root.expanded = "";
+        root.gestureModel = null;
+        root.activeGestureDirection = "";
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: Theme.spacingLg
