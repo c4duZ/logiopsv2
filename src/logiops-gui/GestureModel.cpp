@@ -95,6 +95,11 @@ void GestureModel::seedFromDaemon() {
         QDBusInterface props(
             kService, childPath,
             QStringLiteral("org.freedesktop.DBus.Properties"), _bus);
+        // This best-effort readback runs synchronously on the GUI thread; cap the
+        // per-call wait so a slow/asleep-device GetConfig (which makes the daemon
+        // do a HID++ hardware read) can't freeze the window for the 25s default
+        // D-Bus timeout. A missed seed just leaves a direction's default phrase.
+        props.setTimeout(250);
 
         for (const char* t : kTypes) {
             const QString type = QString::fromUtf8(t);
@@ -110,6 +115,7 @@ void GestureModel::seedFromDaemon() {
             // Read the granularity param via the per-mode getter (best-effort; a
             // missing/zeroed value just leaves the default granularity phrase).
             QDBusInterface gesture(kService, childPath, iface, _bus);
+            gesture.setTimeout(250);
             if (type == QLatin1String("OnInterval")) {
                 QDBusMessage reply = gesture.call(QStringLiteral("GetConfig"));
                 if (reply.type() == QDBusMessage::ReplyMessage &&
