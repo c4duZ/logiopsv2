@@ -33,5 +33,29 @@
       <arg name="charging" type="b"/>
       <arg name="known" type="b"/>
     </signal>
+
+    <!--
+      Profile + restore surface (Plan 04, PROF-01 / CONF-02). GetProfiles returns
+      the manual profile names; SetProfile(name) creates-if-absent + switches live;
+      RemoveProfile deletes one; ClearProfile resets the named profile to defaults
+      and reconfigures the hardware (restore). ActiveProfile / DefaultProfile are
+      read-only string properties. VERIFIED src/logid/Device.cpp:340-355. These live
+      on the SAME PizzaPixlLogiOpsDeviceInterface so there is one device proxy class
+      (ProfilesModel + ConfigState reuse it).
+    -->
+    <method name="GetProfiles">
+      <arg name="profiles" type="as" direction="out"/>
+    </method>
+    <method name="SetProfile">
+      <arg name="profile" type="s" direction="in"/>
+    </method>
+    <method name="RemoveProfile">
+      <arg name="profile" type="s" direction="in"/>
+    </method>
+    <method name="ClearProfile">
+      <arg name="profile" type="s" direction="in"/>
+    </method>
+    <property name="ActiveProfile" type="s" access="read"/>
+    <property name="DefaultProfile" type="s" access="read"/>
   </interface>
 </node>

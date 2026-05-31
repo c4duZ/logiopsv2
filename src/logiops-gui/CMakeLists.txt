@@ -46,6 +46,11 @@ qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_hiresscroll.xml logid_hiresscroll
 qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_thumbwheel.xml  logid_thumbwheel_proxy)
 qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_buttons.xml     logid_buttons_proxy)
 qt_add_dbus_interface(GUI_DBUS_SRCS dbus/logid_button.xml      logid_button_proxy)
+# Plan 04 extended logid_device.xml (above) with the profile + restore surface
+# (GetProfiles/SetProfile/RemoveProfile/ClearProfile + ActiveProfile/DefaultProfile)
+# on the SAME PizzaPixlLogiOpsDeviceInterface, so the Profiles tab + ConfigState
+# reuse the existing logid_device_proxy class — no new proxy (a second XML for the
+# same D-Bus interface name would collide on the generated class name).
 
 # Static library so test/DeviceModelTest can link the model without pulling in
 # main.cpp / QGuiApplication. Plan 03 adds DeviceModel.cpp (the model under test)
@@ -58,6 +63,8 @@ target_sources(logiops-gui-lib PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/DeviceControllerFactory.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/ButtonsModel.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/KeyNameMapper.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/ProfilesModel.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/ConfigState.cpp
         ${GUI_DBUS_SRCS})
 # Qt6::Gui for QGuiApplication::clipboard() (the access-denied Copy CTA). The lib
 # stays free of Qt6::Quick/Qml so the model/connection unit test links lean.

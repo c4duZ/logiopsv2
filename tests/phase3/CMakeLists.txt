@@ -127,3 +127,26 @@ if(TARGET logiops-gui-lib AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/DpiCycleTest.cp
         add_test(NAME phase3_dpi_cycle COMMAND phase3_dpi_cycle_test)
     endif()
 endif()
+
+# ---------------------------------------------------------------------------
+# ProfilesModel + ConfigState unit (GUI-side, QtTest) — Plan 04 (PROF-01 /
+# CONF-01 / CONF-02). Drives manual profile create/switch/remove/rename via a
+# RecordingProfilesModel (records the SetProfile/RemoveProfile dispatch) and the
+# dirty/async-Save/restore flow via a RecordingConfigState (records Save/
+# ClearProfile + feeds simulated daemon replies into the reply sinks) with no live
+# bus — asserting the two UI-SPEC Save error-string mappings (auth-declined vs
+# daemon-down) and the ClearProfile restore. Gated identically on the GUI lib.
+# ---------------------------------------------------------------------------
+if(TARGET logiops-gui-lib AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/ProfilesModelTest.cpp)
+    find_package(Qt6 6.4 COMPONENTS Test QUIET)
+    if(Qt6_FOUND)
+        set(CMAKE_AUTOMOC ON)
+        add_executable(phase3_profiles_test ProfilesModelTest.cpp)
+        target_link_libraries(phase3_profiles_test PRIVATE
+                logiops-gui-lib Qt6::Test)
+        set_target_properties(phase3_profiles_test PROPERTIES
+                CXX_STANDARD 20
+                CXX_STANDARD_REQUIRED ON)
+        add_test(NAME phase3_profiles COMMAND phase3_profiles_test)
+    endif()
+endif()

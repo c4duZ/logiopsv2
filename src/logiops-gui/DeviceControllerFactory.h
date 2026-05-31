@@ -23,10 +23,14 @@
 #include <QObject>
 #include <QString>
 
-namespace logiops_gui {
+// Full definitions required: the Q_PROPERTY(T*) metatypes the moc emits for this
+// class need the complete types (a forward declaration suffices for the pointer
+// member but not for Q_DECLARE_METATYPE, which moc instantiates here).
+#include "ButtonsModel.h"
+#include "DeviceController.h"
+#include "ProfilesModel.h"
 
-class DeviceController;
-class ButtonsModel;
+namespace logiops_gui {
 
 /*
  * DeviceControllerFactory — owns the single "currently selected device"
@@ -48,6 +52,10 @@ class DeviceControllerFactory final : public QObject {
     // lock-step with the controller. Its hostCount is seeded from the controller
     // (HOST-01: the daemon's ChangeHost.GetHostCount, via the controller).
     Q_PROPERTY(logiops_gui::ButtonsModel* buttonsModel READ buttonsModel NOTIFY controllerChanged)
+    // The per-device Profiles model for the Profiles tab (PROF-01), swapped in
+    // lock-step with the controller. Manual profile create/switch/remove over
+    // .Device.GetProfiles/SetProfile/RemoveProfile.
+    Q_PROPERTY(logiops_gui::ProfilesModel* profilesModel READ profilesModel NOTIFY controllerChanged)
 
 public:
     explicit DeviceControllerFactory(QObject* parent = nullptr);
@@ -55,6 +63,7 @@ public:
 
     [[nodiscard]] DeviceController* controller() const { return _controller; }
     [[nodiscard]] ButtonsModel* buttonsModel() const { return _buttonsModel; }
+    [[nodiscard]] ProfilesModel* profilesModel() const { return _profilesModel; }
 
     // Build (or rebuild) the controller for the given device object-path. An
     // empty path clears the selection. No-op when the path is unchanged.
@@ -67,6 +76,7 @@ private:
     QDBusConnection _bus;
     DeviceController* _controller = nullptr;
     ButtonsModel* _buttonsModel = nullptr;
+    ProfilesModel* _profilesModel = nullptr;
     QString _currentPath;
 };
 

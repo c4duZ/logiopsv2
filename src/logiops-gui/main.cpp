@@ -16,12 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#include "ConfigState.h"
 #include "DaemonConnection.h"
 #include "DeviceController.h"
 #include "DeviceControllerFactory.h"
 #include "DeviceModel.h"
 #include "KeyNameMapper.h"
 
+#include <QDBusConnection>
 #include <QGuiApplication>
 #include <QObject>
 #include <QQmlApplicationEngine>
@@ -70,6 +72,16 @@ int main(int argc, char* argv[]) {
     // factory builds + introspects a fresh controller per device). QML renders
     // only — capability discovery + marshalling stay in C++ (CONTEXT.md).
     logiops_gui::DeviceControllerFactory controllerFactory;
+    // CONF-01 / CONF-02: the global persistence brain. Tracks unsaved changes
+    // (every tab setter calls markDirty()), drives the async polkit-gated
+    // .Config.Save (no UI freeze), and restores defaults via .Device.ClearProfile.
+    // Same bus selection as the rest of the GUI (WR-01: user bus in a USE_USER_BUS
+    // dev build, system bus otherwise).
+#ifdef USE_USER_BUS
+    logiops_gui::ConfigState configState(QDBusConnection::sessionBus());
+#else
+    logiops_gui::ConfigState configState(QDBusConnection::systemBus());
+#endif
     // BTN-02 key-capture -> evdev names bridge (static mapper exposed to QML).
     KeyNameBridge keyNames;
 
@@ -78,6 +90,7 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty(QStringLiteral("daemon"), &daemon);
     engine.rootContext()->setContextProperty(QStringLiteral("deviceControllerFactory"),
                                              &controllerFactory);
+    engine.rootContext()->setContextProperty(QStringLiteral("configState"), &configState);
     engine.rootContext()->setContextProperty(QStringLiteral("keyNames"), &keyNames);
 
     // Load the shell from the qt_add_qml_module resource. Qt 6.4.2 has no
