@@ -2,8 +2,15 @@
  "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
  "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
 <busconfig>
+  <!-- By default, restrict who may receive LogiOps *signals* (broadcasts).
+       Scope the deny to signals only: an unqualified `receive_sender` deny
+       also blocks every connection (including polkitd) from receiving the
+       method calls the root daemon makes to OTHER services, which broke the
+       daemon's own polkit CheckAuthorization query and thus Save. Method-call
+       send/receive is governed by the per-user/group rules below plus the
+       system default policy. -->
   <policy context="default">
-    <deny receive_sender="pizza.pixl.LogiOps"/>
+    <deny receive_sender="pizza.pixl.LogiOps" receive_type="signal"/>
   </policy>
 
   <!-- Daemon owns the name as root -->
