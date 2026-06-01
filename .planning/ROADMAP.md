@@ -180,7 +180,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Success Criteria** (what must be TRUE):
   1. User can build an ordered Smart Action of keystroke/text/media steps with inter-step delays, bound to one button, and it fires in order
   2. User can add "launch app / open URL" steps that execute via a user-session helper and never as root
-**Plans**: TBD
+**Plans**: 4 plans
+  - [ ] 07-00-PLAN.md — Wave 0 harness: tests/phase7 CTest + RED daemon step-sequencer accounting (ordering + cumulative delay + launch-delegation) + RED SmartActionModel scaffold (MACRO-01, MACRO-02)
+  - [ ] 07-01-PLAN.md — Daemon: SmartAction composite action + config::SmartAction step schema + run_task_after sequencer + Launch routed to the documented session-helper IPC contract, never spawned by root (MACRO-01, MACRO-02)
+  - [ ] 07-02-PLAN.md — GUI brain: SmartActionModel two-step step-CRUD dispatch + typed Action.SmartAction proxy + Launch isDelegated (MACRO-01, MACRO-02)
+  - [ ] 07-03-PLAN.md — GUI: SmartActionBuilder.qml ordered step editor + ReassignPanel Smart Action category + Theme + on-hardware UAT (MACRO-01, MACRO-02)
 **UI hint**: yes
 **Research flag**: Verify Options+ Smart Action step vocabulary before locking scope. New composite action reuses the worker pool's `run_task_after` for delays; launch/URL steps route to the non-root session helper introduced in Phase 5. **Adapt from 4.1**: the step vocabulary + card model are now concrete — `data/macros/predefined_*.json` (e.g. `APP_WINDOWS_MANAGEMENT`/`BRING_TO_FOREGROUND`, categories) and `integrations/plugin_*/config.json` (per-app cards) define our schema; re-implement, don't bundle.
 
@@ -226,6 +230,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 4.2 → 5 → 6
 | 4.2 Gesture Live-Apply Fix & UX Alignment (INSERTED) | 0/4 | Planned | - |
 | 5. Per-Application Profiles & Profile Sharing | 0/5 | Planned | - |
 | 6. Action Wheel | 0/4 | Planned | - |
-| 7. Smart Actions / Macros | 0/TBD | Not started | - |
+| 7. Smart Actions / Macros | 0/4 | Not started | - |
 | 8. Keyboard Backlight | 0/3 | Not started | - |
 | 9. Debian Packaging | 0/2 | Not started | - |
