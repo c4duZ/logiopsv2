@@ -156,7 +156,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. User can configure a radial wheel with N slices, each bound to an action
   2. User can trigger the wheel with a button, flick toward a slice, and release to fire the chosen action
   3. User sees a radial overlay at the cursor when the wheel is active, degrading gracefully (e.g. centered pop-up) where the compositor cannot render a follow-the-pointer overlay
-**Plans**: TBD
+**Plans**: 4 plans
+  - [ ] 06-01-PLAN.md — X11-vs-Wayland overlay spike (click-through follow-cursor proof) → 06-SPIKE.md go/no-go + chosen technique per compositor (WHEEL-03)
+  - [ ] 06-02-PLAN.md — Daemon ActionWheel feature/action: N-slice config schema + flick-angle detection from raw XY + fire-on-release + ActiveSlice signal + RED geometry test (WHEEL-01, WHEEL-02)
+  - [ ] 06-03-PLAN.md — GUI config: WheelModel two-step write + typed Action.ActionWheel proxy + WheelEditor.qml + ReassignPanel category (WHEEL-01)
+  - [ ] 06-04-PLAN.md — GUI overlay: OverlayPlatform (spike technique) + WheelOverlay + RadialOverlay.qml driven by ActiveSlice + on-hardware UAT (WHEEL-03)
 **UI hint**: yes
 **Research flag**: Highest-risk feature — run a dedicated X11-vs-Wayland overlay spike (GNOME-Mutter vs KDE-KWin vs wlroots; confirm Mutter layer-shell status) BEFORE building. Daemon detects/highlights from HID++ deltas and executes; GUI renders only. **Adapt from 4.1**: the slice-selection mechanic, radial layout, and OSD feel come from the mined `app.asar` study + `data/overlay/osd_resources.json` — re-implement in our own overlay, don't reuse Logitech art.
 
@@ -209,7 +213,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 4.2 → 5 → 6
 | 4.1 Options+ Reference Mining (INSERTED) | 0/4 | Not started | - |
 | 4.2 Gesture Live-Apply Fix & UX Alignment (INSERTED) | 0/TBD | Not started | - |
 | 5. Per-Application Profiles & Profile Sharing | 0/TBD | Not started | - |
-| 6. Action Wheel | 0/TBD | Not started | - |
+| 6. Action Wheel | 0/4 | Planned | - |
 | 7. Smart Actions / Macros | 0/TBD | Not started | - |
 | 8. Keyboard Backlight | 0/TBD | Not started | - |
 | 9. Debian Packaging | 0/2 | Not started | - |
