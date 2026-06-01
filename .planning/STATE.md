@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04.1-02-PLAN.md
-last_updated: "2026-06-01T03:40:38.757Z"
+stopped_at: Completed 04.1-03-PLAN.md
+last_updated: "2026-06-01T03:45:39.877Z"
 last_activity: 2026-06-01
 progress:
   total_phases: 11
   completed_phases: 4
   total_plans: 46
-  completed_plans: 22
-  percent: 48
+  completed_plans: 23
+  percent: 50
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 ## Current Position
 
 Phase: 04.1 (options-plus-reference-mining) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-01
 
@@ -71,6 +71,7 @@ Progress: [███████▌░░] 75%
 | Phase 03-core-config-ui-persistence P04 | 38 | 2 tasks | 16 files |
 | Phase 04.1 P01 | 9 | 2 tasks | 3 files |
 | Phase 04.1 P02 | 3 | 2 tasks | 2 files |
+| Phase 04.1 P03 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,7 @@ Recent decisions affecting current work:
 - [Phase 04.1]: Hybrid/reference-only is the standing rule (adapt behavior+vocabulary, ship only our own QML/strings); enforced as Phase 9 BLOCKING legal-asset audit. Encrypted device DB (devices_*.json, key-id/file-sha+binary) is unusable, no decryption; capability comes from live HID++ enumeration + public DBs.
 - [Phase 04.1]: applications.json detection is Windows-only (no X11 WM_CLASS); PROF-03 window-class/executable matching is OUR Linux rule layer, seeded by the Options+ applicationId taxonomy as a catalog
 - [Phase 04.1]: Smart-action step model unifies predefined_win.json + applications.json macro.type vocab; process-spawn/window steps (OPEN_FILE_FOLDER, APP_WINDOWS_MANAGEMENT) route to a non-root session helper (MACRO-02)
+- [Phase 04.1]: [Phase 04.1]: app.asar extracted (565 files, ~81M) to a gitignored phase scratch dir (never src/); only a .extracted marker + an owned asar-inventory.md are committed. The Options+ renderer is minified-bundled React, so the Plan-04 design study must use the running app + readable LogiOptionsPlus/data/ (strings/defaults/overlay/macros), not the JS bundles.
 
 ### Pending Todos
 
@@ -116,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-01T03:40:31.285Z
-Stopped at: Completed 04.1-02-PLAN.md
+Last session: 2026-06-01T03:45:33.819Z
+Stopped at: Completed 04.1-03-PLAN.md
 Resume file: None
