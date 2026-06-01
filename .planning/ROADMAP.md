@@ -227,5 +227,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 4.2 → 5 → 6
 | 5. Per-Application Profiles & Profile Sharing | 0/5 | Planned | - |
 | 6. Action Wheel | 0/4 | Planned | - |
 | 7. Smart Actions / Macros | 0/TBD | Not started | - |
-| 8. Keyboard Backlight | 0/TBD | Not started | - |
+| 8. Keyboard Backlight | 0/3 | Not started | - |
 | 9. Debian Packaging | 0/2 | Not started | - |
