@@ -116,7 +116,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The `resources/app.asar` UI is extracted and studied; a written design spec captures the tab/layout/interaction model we will re-implement (our own QML, our own strings) — pixel study, not asset bundling
   3. The legal boundary is documented: **hybrid/reference-only** — we adapt behavior and vocabulary, we do NOT ship Logitech assets (matters for Phase 9 packaging)
   4. The encrypted/signed per-device descriptor DB (`data/devices/devices_*.json`) is documented as **not usable**; device capability continues to come from live HID++ enumeration (+ public DBs like Solaar/libratbag)
-**Plans**: TBD
+**Plans**: 4 plans
+  - [ ] 04.1-01-PLAN.md — vocabulary.md (gesture/scroll/smart-action terms, pt-BR + en) + legal-boundary.md + device-db-limitation.md (REF-01/03)
+  - [ ] 04.1-02-PLAN.md — smart-action-schema.md (macro step/card vocabulary) + app-match-model.md (window-class/executable match rules) (REF-01)
+  - [ ] 04.1-03-PLAN.md — extract app.asar to gitignored scratch dir + asar-inventory.md UI navigation map (REF-02)
+  - [ ] 04.1-04-PLAN.md — ui-design-spec.md (tab/layout/interaction re-implementation target) + overlay-osd-spec.md (radial/OSD model) (REF-01/02)
 **Notes**: Pure analysis/spec phase — no daemon or GUI code ships here; output is intel + design specs that 4.2 and 5–8 consume. Decision (2026-05-31): hybrid adaptation depth.
 
 ### Phase 4.2: Gesture Live-Apply Fix & Options+ UX Alignment (INSERTED)
@@ -200,7 +204,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 4.2 → 5 → 6
 | 2. D-Bus Client & Device List | 5/5 | Complete    | 2026-05-30 |
 | 3. Core Config UI & Persistence | 5/5 | Complete    | 2026-05-31 |
 | 4. Fine-Grained Gesture Control | 4/4 | Built (live-apply defect → 4.2) | 2026-05-31 |
-| 4.1 Options+ Reference Mining (INSERTED) | 0/TBD | Not started | - |
+| 4.1 Options+ Reference Mining (INSERTED) | 0/4 | Not started | - |
 | 4.2 Gesture Live-Apply Fix & UX Alignment (INSERTED) | 0/TBD | Not started | - |
 | 5. Per-Application Profiles & Profile Sharing | 0/TBD | Not started | - |
 | 6. Action Wheel | 0/TBD | Not started | - |
