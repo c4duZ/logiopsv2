@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 04 UI-SPEC approved
-last_updated: "2026-05-31T13:36:31.450Z"
-last_activity: 2026-05-31
+stopped_at: Completed 04.1-01-PLAN.md
+last_updated: "2026-06-01T03:35:50.935Z"
+last_activity: 2026-06-01
 progress:
-  total_phases: 9
+  total_phases: 11
   completed_phases: 4
-  total_plans: 20
-  completed_plans: 20
-  percent: 100
+  total_plans: 46
+  completed_plans: 21
+  percent: 46
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-30)
 
 **Core value:** Bring the full Logitech Options+ experience to Linux — configure a Logitech device through a real GUI instead of hand-editing `/etc/logid.cfg`.
-**Current focus:** Phase 4 — Fine-Grained Gesture Control
+**Current focus:** Phase 04.1 — options-plus-reference-mining
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
-Status: Executing Phase 4
-Last activity: 2026-05-31
+Phase: 04.1 (options-plus-reference-mining) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-06-01
 
 Progress: [███████▌░░] 75%
 
@@ -69,6 +69,7 @@ Progress: [███████▌░░] 75%
 | Phase 03-core-config-ui-persistence P02 | 18 | 2 tasks | 16 files |
 | Phase 03 P03 | 20 | 3 tasks | 14 files |
 | Phase 03-core-config-ui-persistence P04 | 38 | 2 tasks | 16 files |
+| Phase 04.1 P01 | 9 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,7 @@ Recent decisions affecting current work:
 - [Phase 03-core-config-ui-persistence]: [Phase 3]: Buttons tab landed (BTN-01..04, HOST-01) — ButtonsModel does the strict two-step async reassign (SetAction then .Action.<type> param setter) over .Buttons/.Button, CID-keyed; setChangeHost pre-validates 1..N/next/prev before the D-Bus call (T-3-02-02 stoi DoS guard, unit-asserted). HOST-01 via option-a: exposed read-only daemon ChangeHost.GetHostCount (-Werror clean); GUI seeds host slots from it. QML: synced DeviceRender+BindingList + non-modal ReassignPanel (7 categories, live key-capture, device-driven host slots). ButtonsModel owned by DeviceControllerFactory (per-device swap); KeyNameMapper exposed to QML via keyNames bridge. 10/10 CTest GREEN. On-hardware reassign/key-capture/host-switch deferred to phase gate.
 - [Phase 03]: [Phase 3]: DPI-cycle persistence resolved option-a (device-scoped) — config::DpiPreset {value,label} on Profile.dpi_presets + .DPI GetPresets/SetPresets (parallel au/as arrays); extended phase3_save_roundtrip proves values AND labels survive Save. Pointer/Scroll tabs landed (DPI-01..03/SCR-01..03), Scroll sections capability-gated; thumbwheel tap via .ThumbWheel.SetTap (no daemon change). Daemon -Werror clean, phase3 6/6 GREEN.
 - [Phase 03-core-config-ui-persistence]: [Phase 3]: Persistence loop closed (PROF-01/CONF-01/CONF-02) — ProfilesModel (create/switch/remove/rename over .Device.SetProfile/RemoveProfile) + global ConfigState (markDirty from every tab setter; async polkit-gated .Config.Save via QDBusPendingCallWatcher, no UI freeze/no retry-storm; AccessDenied->auth-declined / ServiceUnknown->daemon-down copy with dirty held on error per T-3-04-03; .Device.ClearProfile restore behind a confirmation dialog). Single PizzaPixlLogiOpsDeviceInterface extended (a 2nd XML for the same interface name collides). phase3 7/7 + full 12/12 GREEN, -Werror clean, QML loads clean. Task 3 on-hardware polkit/persistence/restore verify pending.
+- [Phase 04.1]: Hybrid/reference-only is the standing rule (adapt behavior+vocabulary, ship only our own QML/strings); enforced as Phase 9 BLOCKING legal-asset audit. Encrypted device DB (devices_*.json, key-id/file-sha+binary) is unusable, no decryption; capability comes from live HID++ enumeration + public DBs.
 
 ### Pending Todos
 
@@ -111,6 +113,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-31T02:58:52.069Z
-Stopped at: Phase 04 UI-SPEC approved
-Resume file: .planning/phases/04-fine-grained-gesture-control/04-UI-SPEC.md
+Last session: 2026-06-01T03:35:45.569Z
+Stopped at: Completed 04.1-01-PLAN.md
+Resume file: None

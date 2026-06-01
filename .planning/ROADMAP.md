@@ -117,7 +117,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The legal boundary is documented: **hybrid/reference-only** — we adapt behavior and vocabulary, we do NOT ship Logitech assets (matters for Phase 9 packaging)
   4. The encrypted/signed per-device descriptor DB (`data/devices/devices_*.json`) is documented as **not usable**; device capability continues to come from live HID++ enumeration (+ public DBs like Solaar/libratbag)
 **Plans**: 4 plans
-  - [ ] 04.1-01-PLAN.md — vocabulary.md (gesture/scroll/smart-action terms, pt-BR + en) + legal-boundary.md + device-db-limitation.md (REF-01/03)
+  - [x] 04.1-01-PLAN.md — vocabulary.md (gesture/scroll/smart-action terms, pt-BR + en) + legal-boundary.md + device-db-limitation.md (REF-01/03)
   - [ ] 04.1-02-PLAN.md — smart-action-schema.md (macro step/card vocabulary) + app-match-model.md (window-class/executable match rules) (REF-01)
   - [ ] 04.1-03-PLAN.md — extract app.asar to gitignored scratch dir + asar-inventory.md UI navigation map (REF-02)
   - [ ] 04.1-04-PLAN.md — ui-design-spec.md (tab/layout/interaction re-implementation target) + overlay-osd-spec.md (radial/OSD model) (REF-01/02)
