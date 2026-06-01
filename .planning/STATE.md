@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04.1-03-PLAN.md
-last_updated: "2026-06-01T03:45:39.877Z"
+status: verifying
+stopped_at: Completed 04.1-04-PLAN.md
+last_updated: "2026-06-01T03:51:05.786Z"
 last_activity: 2026-06-01
 progress:
   total_phases: 11
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 46
-  completed_plans: 23
-  percent: 50
+  completed_plans: 24
+  percent: 52
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 
 Phase: 04.1 (options-plus-reference-mining) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-01
 
 Progress: [███████▌░░] 75%
@@ -72,6 +72,7 @@ Progress: [███████▌░░] 75%
 | Phase 04.1 P01 | 9 | 2 tasks | 3 files |
 | Phase 04.1 P02 | 3 | 2 tasks | 2 files |
 | Phase 04.1 P03 | 3 | 2 tasks | 3 files |
+| Phase 04.1 P04 | 3 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,7 @@ Recent decisions affecting current work:
 - [Phase 04.1]: applications.json detection is Windows-only (no X11 WM_CLASS); PROF-03 window-class/executable matching is OUR Linux rule layer, seeded by the Options+ applicationId taxonomy as a catalog
 - [Phase 04.1]: Smart-action step model unifies predefined_win.json + applications.json macro.type vocab; process-spawn/window steps (OPEN_FILE_FOLDER, APP_WINDOWS_MANAGEMENT) route to a non-root session helper (MACRO-02)
 - [Phase 04.1]: [Phase 04.1]: app.asar extracted (565 files, ~81M) to a gitignored phase scratch dir (never src/); only a .extracted marker + an owned asar-inventory.md are committed. The Options+ renderer is minified-bundled React, so the Plan-04 design study must use the running app + readable LogiOptionsPlus/data/ (strings/defaults/overlay/macros), not the JS bundles.
+- [Phase 04.1]: Plan 04: two owned design specs written (ui-design-spec.md, overlay-osd-spec.md) framed as alignment deltas vs shipped QML; Pointer/Scroll split and non-modal ReassignPanel kept as intentional divergences; gesture preset-or-custom card deferred to 4.2; action-wheel = daemon detects+ActiveSlice / GUI render-only with centered-pop-up degradation floor. No Logitech asset entered src/ (REF-01/02).
 
 ### Pending Todos
 
@@ -118,6 +120,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-01T03:45:33.819Z
-Stopped at: Completed 04.1-03-PLAN.md
+Last session: 2026-06-01T03:50:59.503Z
+Stopped at: Completed 04.1-04-PLAN.md
 Resume file: None

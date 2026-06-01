@@ -120,7 +120,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   - [x] 04.1-01-PLAN.md — vocabulary.md (gesture/scroll/smart-action terms, pt-BR + en) + legal-boundary.md + device-db-limitation.md (REF-01/03)
   - [x] 04.1-02-PLAN.md — smart-action-schema.md (macro step/card vocabulary) + app-match-model.md (window-class/executable match rules) (REF-01)
   - [x] 04.1-03-PLAN.md — extract app.asar to gitignored scratch dir + asar-inventory.md UI navigation map (REF-02)
-  - [ ] 04.1-04-PLAN.md — ui-design-spec.md (tab/layout/interaction re-implementation target) + overlay-osd-spec.md (radial/OSD model) (REF-01/02)
+  - [x] 04.1-04-PLAN.md — ui-design-spec.md (tab/layout/interaction re-implementation target) + overlay-osd-spec.md (radial/OSD model) (REF-01/02)
 **Notes**: Pure analysis/spec phase — no daemon or GUI code ships here; output is intel + design specs that 4.2 and 5–8 consume. Decision (2026-05-31): hybrid adaptation depth.
 
 ### Phase 4.2: Gesture Live-Apply Fix & Options+ UX Alignment (INSERTED)
