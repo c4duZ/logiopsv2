@@ -190,7 +190,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. The `.deb` installs the GUI with a versioned dependency on the `logid` daemon and ships its D-Bus policy, polkit action, and systemd unit
   2. Install, upgrade, and purge all complete cleanly on a fresh system, verified in CI on a clean VM
   3. After a clean install on a fresh VM, a non-root user completes the D-Bus handshake to the daemon (smoke test)
-**Plans**: TBD
+**Plans**: 2 plans
+  - [ ] 09-01-PLAN.md — debian/ source tree: two-package split (logiops-daemon ships policy/polkit/unit; logiops-gui + .desktop) with versioned daemon Depends (PKG-01)
+  - [ ] 09-02-PLAN.md — package-deb CI: build .deb on clean Debian/Ubuntu + install/upgrade/purge + non-root D-Bus handshake smoke + BLOCKING legal-asset audit (PKG-02)
 **Research flag**: Standard `debhelper`/`dh_installsystemd` patterns — main risk is assuming the daemon is pre-installed. Enforce the GUI↔daemon version contract decided in Phase 1; test on clean VMs. **Legal gate (from 4.1)**: the `.deb` ships ONLY our own assets/strings/UI — verify no Logitech proprietary asset (app.asar content, Options+ strings, icons, device data) is bundled. Hybrid/reference-only boundary is a release blocker here.
 
 ## Progress
@@ -210,4 +212,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 4.2 → 5 → 6
 | 6. Action Wheel | 0/TBD | Not started | - |
 | 7. Smart Actions / Macros | 0/TBD | Not started | - |
 | 8. Keyboard Backlight | 0/TBD | Not started | - |
-| 9. Debian Packaging | 0/TBD | Not started | - |
+| 9. Debian Packaging | 0/2 | Not started | - |
