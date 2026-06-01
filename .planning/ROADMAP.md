@@ -144,7 +144,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. User can define app-match rules by window class / executable
   3. Per-application switching works on a Wayland compositor, not only X11 (with documented degradation where the compositor cannot expose the foreground app)
   4. User can export a profile to a shareable file and import one back
-**Plans**: TBD
+**Plans**: 5 plans
+  - [ ] 05-00-PLAN.md — Wave 0: phase5 CTest harness + RED match-engine (PROF-03) + RED profile-IO (PROF-04) contracts
+  - [ ] 05-01-PLAN.md — Focus-detection spike (X11/wlroots/KWin/Mutter) + degradation matrix + FocusWatcher abstraction + runtime session detection (PROF-05)
+  - [ ] 05-02-PLAN.md — Non-root session helper: AppMatchRule/MatchEngine + RuleStore + X11/Wayland watchers + SetProfile wiring (PROF-02, PROF-03, PROF-05)
+  - [ ] 05-03-PLAN.md — Profile export/import: ProfileIO versioned-envelope round-trip + validation (PROF-04)
+  - [ ] 05-04-PLAN.md — GUI App Rules tab + AppRulesModel + export/import bridge + on-hardware UAT (PROF-02, PROF-03, PROF-04)
 **UI hint**: yes
 **Research flag**: Wayland foreground-app detection is compositor-specific and possibly partial — verify `wlr-foreign-toplevel` / GNOME-extension / KWin options. Window-watching lives in a non-root user-session agent calling existing `ChangeProfile`. **Adapt from 4.1**: reuse the Options+ `data/applications.json` app-match DB + its window-class/executable match model as the reference for our own rule schema (do not bundle the file).
 
@@ -212,7 +217,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 4.2 → 5 → 6
 | 4. Fine-Grained Gesture Control | 4/4 | Built (live-apply defect → 4.2) | 2026-05-31 |
 | 4.1 Options+ Reference Mining (INSERTED) | 0/4 | Not started | - |
 | 4.2 Gesture Live-Apply Fix & UX Alignment (INSERTED) | 0/TBD | Not started | - |
-| 5. Per-Application Profiles & Profile Sharing | 0/TBD | Not started | - |
+| 5. Per-Application Profiles & Profile Sharing | 0/5 | Planned | - |
 | 6. Action Wheel | 0/4 | Planned | - |
 | 7. Smart Actions / Macros | 0/TBD | Not started | - |
 | 8. Keyboard Backlight | 0/TBD | Not started | - |
