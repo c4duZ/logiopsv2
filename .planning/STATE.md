@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04.1-01-PLAN.md
-last_updated: "2026-06-01T03:35:50.935Z"
+stopped_at: Completed 04.1-02-PLAN.md
+last_updated: "2026-06-01T03:40:38.757Z"
 last_activity: 2026-06-01
 progress:
   total_phases: 11
   completed_phases: 4
   total_plans: 46
-  completed_plans: 21
-  percent: 46
+  completed_plans: 22
+  percent: 48
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 ## Current Position
 
 Phase: 04.1 (options-plus-reference-mining) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-01
 
@@ -70,6 +70,7 @@ Progress: [███████▌░░] 75%
 | Phase 03 P03 | 20 | 3 tasks | 14 files |
 | Phase 03-core-config-ui-persistence P04 | 38 | 2 tasks | 16 files |
 | Phase 04.1 P01 | 9 | 2 tasks | 3 files |
+| Phase 04.1 P02 | 3 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,8 @@ Recent decisions affecting current work:
 - [Phase 03]: [Phase 3]: DPI-cycle persistence resolved option-a (device-scoped) — config::DpiPreset {value,label} on Profile.dpi_presets + .DPI GetPresets/SetPresets (parallel au/as arrays); extended phase3_save_roundtrip proves values AND labels survive Save. Pointer/Scroll tabs landed (DPI-01..03/SCR-01..03), Scroll sections capability-gated; thumbwheel tap via .ThumbWheel.SetTap (no daemon change). Daemon -Werror clean, phase3 6/6 GREEN.
 - [Phase 03-core-config-ui-persistence]: [Phase 3]: Persistence loop closed (PROF-01/CONF-01/CONF-02) — ProfilesModel (create/switch/remove/rename over .Device.SetProfile/RemoveProfile) + global ConfigState (markDirty from every tab setter; async polkit-gated .Config.Save via QDBusPendingCallWatcher, no UI freeze/no retry-storm; AccessDenied->auth-declined / ServiceUnknown->daemon-down copy with dirty held on error per T-3-04-03; .Device.ClearProfile restore behind a confirmation dialog). Single PizzaPixlLogiOpsDeviceInterface extended (a 2nd XML for the same interface name collides). phase3 7/7 + full 12/12 GREEN, -Werror clean, QML loads clean. Task 3 on-hardware polkit/persistence/restore verify pending.
 - [Phase 04.1]: Hybrid/reference-only is the standing rule (adapt behavior+vocabulary, ship only our own QML/strings); enforced as Phase 9 BLOCKING legal-asset audit. Encrypted device DB (devices_*.json, key-id/file-sha+binary) is unusable, no decryption; capability comes from live HID++ enumeration + public DBs.
+- [Phase 04.1]: applications.json detection is Windows-only (no X11 WM_CLASS); PROF-03 window-class/executable matching is OUR Linux rule layer, seeded by the Options+ applicationId taxonomy as a catalog
+- [Phase 04.1]: Smart-action step model unifies predefined_win.json + applications.json macro.type vocab; process-spawn/window steps (OPEN_FILE_FOLDER, APP_WINDOWS_MANAGEMENT) route to a non-root session helper (MACRO-02)
 
 ### Pending Todos
 
@@ -113,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-01T03:35:45.569Z
-Stopped at: Completed 04.1-01-PLAN.md
+Last session: 2026-06-01T03:40:31.285Z
+Stopped at: Completed 04.1-02-PLAN.md
 Resume file: None
