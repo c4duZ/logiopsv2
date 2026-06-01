@@ -32,10 +32,83 @@ Full evidence: `.planning/debug/gesture-live-apply-and-save.md` (session `gestur
 ## Requirements
 - GEST-05 (live-apply correctness) + GEST-01..04 rework for UX alignment.
 
-## ⚠ EXECUTION GATE (plan-checker blocker, 2026-06-01 — decision: resolve at execution)
-The plan-checker flagged that Plan 04.2-01's premise (daemon creates a *detached, non-dispatched, non-introspectable* child action) is **NOT confirmed** and is contradicted by (a) the committed code — `ReleaseGesture::setAction` already assigns a strong `_action = makeAction(...)` on `_node` — and (b) the newest, still-`investigating` notes in the debug session, which suggest the daemon may be correct and the real culprit is **GUI call-ordering / node-materialization** (the GUI possibly issues `SetGesture`/`SetAction`/`SetKeys` to the wrong node or wrong order at runtime).
+## 🚦 START HERE — EXECUTION GATE (must clear before ANY 4.2 code change)
 
-**Decision (user, 2026-06-01):** do NOT lock the fix now — when Phase 4.2 executes (after 4.1), the FIRST task MUST be to **confirm the root cause** with a clean discriminating capture (live `busctl --system monitor` + daemon `-vvv` while configuring a NON-gesture button on the MX Master 4): does the GUI emit the calls, to the correct `/buttons/<N>/gestures/<dir>` node, in order, without error? Is the Introspect-omission of `Action.Keypress` actually reproducible on a fresh GUI-driven sequence?
-- If the daemon detached-copy defect **reproduces** → execute Plan 04.2-01 as written, pinning the test to that fresh evidence.
-- If it confirms **GUI ordering/materialization** → re-scope: shrink the daemon work to the `OnRelease`/`OnThreshold` interface-name collision + a regression CTest, and fix the real defect in the GUI (`ReassignPanel`/`GestureModel` — the `SetAction("Gesture")`-then-write ordering / node materialization).
-Either way, do not "fix" daemon code that is already correct while the real defect goes untouched (which would pass the CTest green but fail the hardware UAT).
+> **Status as of 2026-06-01:** Phase 4.1 is complete. Phase 4.2 has NOT started.
+> The very first 4.2 task is this gate — a live hardware capture. Do it before touching code.
+> **Do NOT just run `/gsd-execute-phase 4.2`** until the gate result is recorded below, because
+> Plan 04.2-01 is written for the *daemon* hypothesis, which the evidence below contradicts.
+
+### The conflict to resolve
+The original debug session concluded **Bug A = a daemon defect** (a *live* `SetAction` creates a
+detached, non-dispatched, non-introspectable child action). The plan-checker AND a fresh static
+code analysis (2026-06-01) **contradict that premise**. The daemon already does the "right" wiring;
+the defect is almost certainly in the **GUI call-ordering / node-materialization**. If you "fix" the
+daemon you'll get a green CTest and a still-broken mouse.
+
+### Static-analysis findings (2026-06-01, code read — no hardware)
+Confidence: **~85% GUI defect (Hypothesis B)**, ~15% daemon (Hypothesis A).
+1. `ReleaseGesture::setAction` (`src/logid/actions/gesture/ReleaseGesture.cpp:97`) ALREADY stores a
+   strong `_action = Action::makeAction(_device, type, _config.action, _node)`. `ThresholdGesture`
+   does the same (`ThresholdGesture.cpp:95`). `Action::makeAction` sets `ret->_self = ret`
+   (`Action.cpp:106`), keeping the action alive; the node's weak entry
+   (`ipcgull/node.h:109`, `_interfaces` is `map<string, weak_ptr<interface>>`) therefore resolves.
+   → The daemon's live `setAction` is **NOT** obviously a detached copy. Plan 04.2-01's core premise
+   is unconfirmed by the code.
+2. **GUI call order** (target nodes matter):
+   - `SetGesture("up","OnRelease")` → on the **button** node `.../buttons/<N>`
+     (`GestureModel.cpp performSetGesture`, child path built at `GestureModel.cpp:519`).
+   - `SetAction("Keypress")` → on `.../buttons/<N>/gestures/up`, iface `Gesture.OnRelease`.
+   - `SetKeys([...])` → on `.../buttons/<N>/gestures/up`, iface `Action.Keypress`.
+   - SetAction/SetKeys are **chained behind the in-flight SetGesture watcher**
+     (`_pendingSetGesture`, `GestureModel.cpp:562-569`). This ordering relies on strict in-order
+     processing; a race between SetGesture materializing the child node and SetAction/SetKeys
+     arriving is the prime suspect.
+3. **Real collision (independent defect, fix regardless):** `ReleaseGesture::interface_name` and
+   `ThresholdGesture::interface_name` are **both** `"OnRelease"`
+   (`ReleaseGesture.cpp:25`, `ThresholdGesture.cpp:25`). In `Gesture::makeGesture`
+   (`Gesture.cpp:70-89`) the `ThresholdGesture` branch is therefore **never reached** — `"OnRelease"`
+   always builds a `ReleaseGesture`. The GUI dodges it by never sending `"OnThreshold"`
+   (`GestureModel.cpp:188-189`), but the daemon defect is real and should get a fix + regression CTest.
+
+### ✅ THE GATE: run this discriminating capture FIRST (needs the MX Master 4 + GUI)
+Goal: prove whether, on a **fresh GUI-driven sequence on a button that is NOT already a gesture in
+`logid.cfg`**, the `Action.Keypress` interface is actually missing from Introspect after a
+successful `SetAction("Keypress")` — and whether the GUI hits the **correct node path, in order, without error.**
+
+1. Stop the service daemon, run it foreground with full verbosity:
+   ```bash
+   sudo systemctl stop logid
+   sudo /usr/bin/logid -vvv -c /etc/logid.cfg   # leave running in terminal A
+   ```
+2. In terminal B, monitor the system bus traffic for the service:
+   ```bash
+   sudo busctl --system monitor pizza.pixl.LogiOps   # or: sudo dbus-monitor --system "destination='pizza.pixl.LogiOps'"
+   ```
+3. Open the GUI, pick a button that is **NOT** configured as a gesture in `logid.cfg`, set it to
+   Gesture → set a direction's mode (OnRelease) → assign a Keypress → set keys. Watch terminals A+B.
+4. Immediately after the `SetAction("Keypress")` reply is seen, introspect the SAME gesture node
+   (substitute the real device id / button index / direction from the capture):
+   ```bash
+   sudo busctl --system introspect pizza.pixl.LogiOps \
+     /pizza/pixl/LogiOps/devices/<id>/buttons/<N>/gestures/up
+   ```
+
+### Record the result here, then proceed by the matching branch:
+- **Branch A — daemon detached-copy DOES reproduce** (Introspect omits `Action.Keypress` on a
+  correct, in-order, error-free GUI sequence to the right node):
+  → Execute **Plan 04.2-01 as written**, pinning its CTest to this fresh evidence.
+- **Branch B — GUI ordering/materialization confirmed** (the GUI hits the wrong node, wrong order,
+  an error reply, or the `Action.Keypress` interface IS present in Introspect so the daemon was fine):
+  → **Re-scope before executing.** Shrink the daemon plan to: fix the `OnRelease`/`OnThreshold`
+  interface-name collision + add a regression CTest. Move the real fix to the **GUI**
+  (`ReassignPanel` / `GestureModel` — the `SetAction("Gesture")`-then-write ordering / node
+  materialization / watcher chaining at `GestureModel.cpp:562-569`). Update Plans 04.2-01..04 to
+  match, then execute.
+
+**Invariant (do not violate):** do not "fix" daemon code that is already correct while the real
+defect goes untouched — that yields a green CTest and a red hardware UAT.
+
+> Full static-analysis detail and the daemon-vs-GUI evidence chain were produced in the
+> 2026-06-01 autonomous session (stopped here by user decision). Re-read this gate top-to-bottom
+> before running `/gsd-execute-phase 4.2` or `/gsd-plan-phase 4.2 --gaps`.
