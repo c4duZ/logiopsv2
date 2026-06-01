@@ -1,0 +1,14 @@
+Extraction marker — STUDY ONLY, proprietary content NOT committed.
+
+source:       LogiOptionsPlus/resources/app.asar (82,945,069 bytes)
+extracted_to: .planning/phases/04.1-options-plus-reference-mining/asar-extract/
+tool:         @electron/asar v4.2.0 (via `npx --yes @electron/asar extract`)
+node:         v24.14.1
+npm:          11.11.0
+date:         2026-06-01
+result:       565 files, ~81M (renderer bundles + assets/ + HTML entry points)
+
+NOTE: The extracted tree is gitignored Logitech proprietary material kept for
+DESIGN STUDY ONLY (HYBRID / reference-only rule — see legal-boundary.md).
+Only this marker is committed; the extracted HTML/CSS/JS/icons are never bundled
+into the shipped app and never copied into src/.

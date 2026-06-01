@@ -5,3 +5,11 @@
 
 # Local daemon config (not part of the repo)
 /logid.cfg
+
+/LogiOptionsPlus
+
+# Extracted Options+ app.asar — study-only proprietary content (Phase 04.1), never committed.
+# Ignore the directory CONTENTS (not the dir itself) so the marker negation below applies.
+/.planning/phases/04.1-options-plus-reference-mining/asar-extract/*
+# ...but keep the small extraction marker (proof of extraction, no proprietary content)
+!/.planning/phases/04.1-options-plus-reference-mining/asar-extract/.extracted
