@@ -132,7 +132,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The GUI reads back an existing gesture's mode + action (no more "choose what this direction does" on an already-configured button)
   3. Granularity/threshold set from the GUI changes on-hardware behavior
   4. The gesture builder's wording/flow matches the mined Options+ model ("SEGURAR + MOVER PARA…", predefinição vs personalizada)
-**Plans**: TBD
+**Plans**: 4 plans
+  - [ ] 04.2-01-PLAN.md — Daemon: converge live Gesture::setAction onto the cfg-load wiring so the child action is introspectable + dispatched, confirm SetThreshold/SetInterval mutate the live gesture, fix the ReleaseGesture/ThresholdGesture "OnRelease" name collision + daemon CTest (GEST-05, GEST-02, GEST-03)
+  - [ ] 04.2-02-PLAN.md — GUI: extend GestureModel read-back to resolve the bound action (not just mode/granularity) so the builder reflects existing bindings (GEST-01)
+  - [ ] 04.2-03-PLAN.md — UX: align builder copy/flow to the Options+ hold-and-move + preset-vs-custom vocabulary while keeping the GEST-04 plain-language preview (GEST-04, GEST-01)
+  - [ ] 04.2-04-PLAN.md — Build/install + on-hardware UAT checkpoint on the MX Master 4 (GEST-05, GEST-01, GEST-02, GEST-03, GEST-04)
 **Root cause on file**: `.planning/debug/gesture-live-apply-and-save.md` — daemon dispatch verified correct (Test 1: live `SetKeys` on a cfg-wired action changed hardware behavior); the defect is that a **live** `SetAction("<type>")` on a gesture node creates an action reachable for calls but NOT introspectable/dispatched (Introspect omits `Action.Keypress` after a successful `SetAction`). Bug B (Save/polkit) already fixed + committed (`70e9457`).
 
 ### Phase 5: Per-Application Profiles & Profile Sharing
@@ -187,7 +191,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Success Criteria** (what must be TRUE):
   1. On a supported device, the user can change the keyboard backlight/RGB and see the hardware respond
   2. On devices without the LED feature, the backlight controls are hidden or clearly disabled rather than erroring
-**Plans**: TBD
+**Plans**: 3 plans
+  - [ ] 08-01-PLAN.md — Reverse-engineering spike: confirm LED/backlight HID++ 2.0 feature ID + function map + target device (08-SPIKE.md) [GATE]
+  - [ ] 08-02-PLAN.md — Daemon: hidpp20 Backlight wrapper + high-level DeviceFeature + IPC interface + schema + capability gating (LIGHT-01)
+  - [ ] 08-03-PLAN.md — GUI: .Backlight proxy + DeviceController capability + BacklightTab (capability-gated) + on-hardware UAT (LIGHT-01)
 **UI hint**: yes
 **Research flag**: Greenfield — no LED/Backlight HID++ 2.0 feature wrapper exists in the daemon. Requires reverse-engineering the LED HID++ 2.0 feature per target device; heaviest and most uncertain item. Gate on a confirmed target keyboard. **Adapt from 4.1**: Options+ gives UI vocabulary/strings for backlight controls only; the HID++ LED protocol itself is NOT in the (encrypted) Options+ data — still needs live reverse-engineering (+ OpenRGB/libratbag references).
 
@@ -216,7 +223,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 4.2 → 5 → 6
 | 3. Core Config UI & Persistence | 5/5 | Complete    | 2026-05-31 |
 | 4. Fine-Grained Gesture Control | 4/4 | Built (live-apply defect → 4.2) | 2026-05-31 |
 | 4.1 Options+ Reference Mining (INSERTED) | 0/4 | Not started | - |
-| 4.2 Gesture Live-Apply Fix & UX Alignment (INSERTED) | 0/TBD | Not started | - |
+| 4.2 Gesture Live-Apply Fix & UX Alignment (INSERTED) | 0/4 | Planned | - |
 | 5. Per-Application Profiles & Profile Sharing | 0/5 | Planned | - |
 | 6. Action Wheel | 0/4 | Planned | - |
 | 7. Smart Actions / Macros | 0/TBD | Not started | - |
