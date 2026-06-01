@@ -24,8 +24,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Access Path & Daemon Hardening** - Relax D-Bus policy to a group, polkit-gate writes, sandbox the daemon, length-check HID input so a non-root client can safely reach `pizza.pixl.LogiOps` (completed 2026-05-30)
 - [x] **Phase 2: D-Bus Client & Device List** - Qt/QML app shell + typed D-Bus proxy showing a live, signal-driven device list with battery and connection status (completed 2026-05-30)
-- [ ] **Phase 3: Core Config UI & Persistence** - Visual button remap, DPI, scroll/thumbwheel, manual profiles, and polkit-gated save — the Options+-style "configure without editing text" core
-- [x] **Phase 4: Fine-Grained Gesture Control** - First daemon extension: a guided gesture builder with magnitude/repetition/granularity that fixes "volume +2" and "one desktop per gesture" (completed 2026-05-31)
+- [x] **Phase 3: Core Config UI & Persistence** - Visual button remap, DPI, scroll/thumbwheel, manual profiles, and polkit-gated save — the Options+-style "configure without editing text" core (completed 2026-05-31; polkit Save fixed + verified on hardware 2026-05-31)
+- [x] **Phase 4: Fine-Grained Gesture Control** - First daemon extension: a guided gesture builder with magnitude/repetition/granularity that fixes "volume +2" and "one desktop per gesture" (built 2026-05-31 — **live-apply defect on hardware tracked in Phase 4.2**)
+- [ ] **Phase 4.1: Options+ Reference Mining** (INSERTED) - Extract the Logi Options+ install into our own reference specs: study the `app.asar` UI pixel-by-pixel and parse the readable data (strings vocabulary, macro/Smart-Action schema, `applications.json` app-match DB, overlay/OSD resources, per-app integration configs) into `.planning/intel/options-plus/`. Establish the hybrid/reference-only legal boundary (study, don't bundle proprietary assets) and document the encrypted per-device-DB limitation
+- [ ] **Phase 4.2: Gesture Live-Apply Fix & Options+ UX Alignment** (INSERTED) - Fix the daemon gesture child-action wiring so a GUI-built gesture actually fires on hardware (Bug A; root cause in `.planning/debug/gesture-live-apply-and-save.md`), fix read-back + granularity, and align the gesture builder vocabulary/flow to the mined Options+ "predefinição" model
 - [ ] **Phase 5: Per-Application Profiles & Profile Sharing** - User-session focus watcher (X11 + Wayland) auto-switching profiles by app, plus profile import/export
 - [ ] **Phase 6: Action Wheel** - Flagship radial action menu: new daemon `ActionWheel` feature + GUI overlay (X11 → Wayland layer-shell → fallback), spiked first
 - [ ] **Phase 7: Smart Actions / Macros** - Composite multi-step action (keystrokes/text/media/delays) with launch/open-URL steps routed through a non-root session helper
@@ -105,6 +107,30 @@ Decimal phases appear between their surrounding integers in numeric order.
 **UI hint**: yes
 **Research flag**: This is the first C++ daemon extension — confirm the magnitude/repetition/granularity abstraction over existing `axis_multiplier`/`threshold`/`interval` and fix uinput recreate-per-code churn while in this code.
 
+### Phase 4.1: Options+ Reference Mining (INSERTED)
+**Goal**: We have our own reference specs distilled from the real Logi Options+ install, so every forward phase adapts from how Options+ actually behaves instead of guessing — without bundling Logitech's proprietary assets.
+**Depends on**: Nothing new (uses the local `LogiOptionsPlus/` install, gitignored)
+**Requirements**: REF-01, REF-02, REF-03 (new — reference-fidelity)
+**Success Criteria** (what must be TRUE):
+  1. The readable Options+ data is parsed into `.planning/intel/options-plus/` specs we own: gesture/Smart-Action/scroll **vocabulary** (from `data/strings/*.yaml`, incl. pt-BR), the **macro/Smart-Action schema** (`data/macros/predefined_*.json`, `integrations/plugin_*/config.json`), the **app-match DB** (`data/applications.json`), and **overlay/OSD resources** (`data/overlay/*resources.json`)
+  2. The `resources/app.asar` UI is extracted and studied; a written design spec captures the tab/layout/interaction model we will re-implement (our own QML, our own strings) — pixel study, not asset bundling
+  3. The legal boundary is documented: **hybrid/reference-only** — we adapt behavior and vocabulary, we do NOT ship Logitech assets (matters for Phase 9 packaging)
+  4. The encrypted/signed per-device descriptor DB (`data/devices/devices_*.json`) is documented as **not usable**; device capability continues to come from live HID++ enumeration (+ public DBs like Solaar/libratbag)
+**Plans**: TBD
+**Notes**: Pure analysis/spec phase — no daemon or GUI code ships here; output is intel + design specs that 4.2 and 5–8 consume. Decision (2026-05-31): hybrid adaptation depth.
+
+### Phase 4.2: Gesture Live-Apply Fix & Options+ UX Alignment (INSERTED)
+**Goal**: A gesture built in the GUI actually fires on hardware, reads back correctly, and respects granularity — and the gesture builder speaks the Options+ vocabulary/flow.
+**Depends on**: Phase 4.1 (vocabulary/UX spec), Phase 4
+**Requirements**: GEST-01..04 (rework), GEST-05 (live-apply correctness)
+**Success Criteria** (what must be TRUE):
+  1. A gesture configured via the GUI on a non-cfg button fires its action on hardware (fixes Bug A: the live-created gesture child action is now wired into the dispatched object, not a detached copy)
+  2. The GUI reads back an existing gesture's mode + action (no more "choose what this direction does" on an already-configured button)
+  3. Granularity/threshold set from the GUI changes on-hardware behavior
+  4. The gesture builder's wording/flow matches the mined Options+ model ("SEGURAR + MOVER PARA…", predefinição vs personalizada)
+**Plans**: TBD
+**Root cause on file**: `.planning/debug/gesture-live-apply-and-save.md` — daemon dispatch verified correct (Test 1: live `SetKeys` on a cfg-wired action changed hardware behavior); the defect is that a **live** `SetAction("<type>")` on a gesture node creates an action reachable for calls but NOT introspectable/dispatched (Introspect omits `Action.Keypress` after a successful `SetAction`). Bug B (Save/polkit) already fixed + committed (`70e9457`).
+
 ### Phase 5: Per-Application Profiles & Profile Sharing
 **Goal**: The user's active profile follows the focused application automatically, and profiles can be shared as files.
 **Depends on**: Phase 3
@@ -116,7 +142,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User can export a profile to a shareable file and import one back
 **Plans**: TBD
 **UI hint**: yes
-**Research flag**: Wayland foreground-app detection is compositor-specific and possibly partial — verify `wlr-foreign-toplevel` / GNOME-extension / KWin options. Window-watching lives in a non-root user-session agent calling existing `ChangeProfile`.
+**Research flag**: Wayland foreground-app detection is compositor-specific and possibly partial — verify `wlr-foreign-toplevel` / GNOME-extension / KWin options. Window-watching lives in a non-root user-session agent calling existing `ChangeProfile`. **Adapt from 4.1**: reuse the Options+ `data/applications.json` app-match DB + its window-class/executable match model as the reference for our own rule schema (do not bundle the file).
 
 ### Phase 6: Action Wheel
 **Goal**: The user can trigger a radial action menu at the cursor, flick toward a slice, and release to fire that action.
@@ -128,7 +154,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User sees a radial overlay at the cursor when the wheel is active, degrading gracefully (e.g. centered pop-up) where the compositor cannot render a follow-the-pointer overlay
 **Plans**: TBD
 **UI hint**: yes
-**Research flag**: Highest-risk feature — run a dedicated X11-vs-Wayland overlay spike (GNOME-Mutter vs KDE-KWin vs wlroots; confirm Mutter layer-shell status) BEFORE building. Daemon detects/highlights from HID++ deltas and executes; GUI renders only. Verify Options+ slice-selection mechanic for feel.
+**Research flag**: Highest-risk feature — run a dedicated X11-vs-Wayland overlay spike (GNOME-Mutter vs KDE-KWin vs wlroots; confirm Mutter layer-shell status) BEFORE building. Daemon detects/highlights from HID++ deltas and executes; GUI renders only. **Adapt from 4.1**: the slice-selection mechanic, radial layout, and OSD feel come from the mined `app.asar` study + `data/overlay/osd_resources.json` — re-implement in our own overlay, don't reuse Logitech art.
 
 ### Phase 7: Smart Actions / Macros
 **Goal**: The user can bind a multi-step action to one button, with any process-launching steps executed safely outside the root daemon.
@@ -139,7 +165,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. User can add "launch app / open URL" steps that execute via a user-session helper and never as root
 **Plans**: TBD
 **UI hint**: yes
-**Research flag**: Verify Options+ Smart Action step vocabulary before locking scope. New composite action reuses the worker pool's `run_task_after` for delays; launch/URL steps route to the non-root session helper introduced in Phase 5.
+**Research flag**: Verify Options+ Smart Action step vocabulary before locking scope. New composite action reuses the worker pool's `run_task_after` for delays; launch/URL steps route to the non-root session helper introduced in Phase 5. **Adapt from 4.1**: the step vocabulary + card model are now concrete — `data/macros/predefined_*.json` (e.g. `APP_WINDOWS_MANAGEMENT`/`BRING_TO_FOREGROUND`, categories) and `integrations/plugin_*/config.json` (per-app cards) define our schema; re-implement, don't bundle.
 
 ### Phase 8: Keyboard Backlight
 **Goal**: The user can control keyboard backlight/RGB on supported devices.
@@ -150,7 +176,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. On devices without the LED feature, the backlight controls are hidden or clearly disabled rather than erroring
 **Plans**: TBD
 **UI hint**: yes
-**Research flag**: Greenfield — no LED/Backlight HID++ 2.0 feature wrapper exists in the daemon. Requires reverse-engineering the LED HID++ 2.0 feature per target device; heaviest and most uncertain item. Gate on a confirmed target keyboard.
+**Research flag**: Greenfield — no LED/Backlight HID++ 2.0 feature wrapper exists in the daemon. Requires reverse-engineering the LED HID++ 2.0 feature per target device; heaviest and most uncertain item. Gate on a confirmed target keyboard. **Adapt from 4.1**: Options+ gives UI vocabulary/strings for backlight controls only; the HID++ LED protocol itself is NOT in the (encrypted) Options+ data — still needs live reverse-engineering (+ OpenRGB/libratbag references).
 
 ### Phase 9: Debian Packaging
 **Goal**: The app installs cleanly on Debian/Ubuntu as a package that brings its policy, polkit action, and systemd unit, and survives install/upgrade/purge.
@@ -161,19 +187,21 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Install, upgrade, and purge all complete cleanly on a fresh system, verified in CI on a clean VM
   3. After a clean install on a fresh VM, a non-root user completes the D-Bus handshake to the daemon (smoke test)
 **Plans**: TBD
-**Research flag**: Standard `debhelper`/`dh_installsystemd` patterns — main risk is assuming the daemon is pre-installed. Enforce the GUI↔daemon version contract decided in Phase 1; test on clean VMs.
+**Research flag**: Standard `debhelper`/`dh_installsystemd` patterns — main risk is assuming the daemon is pre-installed. Enforce the GUI↔daemon version contract decided in Phase 1; test on clean VMs. **Legal gate (from 4.1)**: the `.deb` ships ONLY our own assets/strings/UI — verify no Logitech proprietary asset (app.asar content, Options+ strings, icons, device data) is bundled. Hybrid/reference-only boundary is a release blocker here.
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 4.1 → 4.2 → 5 → 6 → 7 → 8 → 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Access Path & Daemon Hardening | 6/6 | Complete    | 2026-05-30 |
 | 2. D-Bus Client & Device List | 5/5 | Complete    | 2026-05-30 |
-| 3. Core Config UI & Persistence | 0/5 | Not started | - |
-| 4. Fine-Grained Gesture Control | 4/4 | Complete    | 2026-05-31 |
+| 3. Core Config UI & Persistence | 5/5 | Complete    | 2026-05-31 |
+| 4. Fine-Grained Gesture Control | 4/4 | Built (live-apply defect → 4.2) | 2026-05-31 |
+| 4.1 Options+ Reference Mining (INSERTED) | 0/TBD | Not started | - |
+| 4.2 Gesture Live-Apply Fix & UX Alignment (INSERTED) | 0/TBD | Not started | - |
 | 5. Per-Application Profiles & Profile Sharing | 0/TBD | Not started | - |
 | 6. Action Wheel | 0/TBD | Not started | - |
 | 7. Smart Actions / Macros | 0/TBD | Not started | - |
