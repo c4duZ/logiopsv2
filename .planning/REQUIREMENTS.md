@@ -50,6 +50,7 @@ Requirements for the initial milestone. Built as a Qt 6 + QML GUI driving the ex
 - [ ] **GEST-02**: User can control gesture granularity so one gesture maps to one discrete step — fixing "volume steps by 2" and "only 1 desktop switch" — by exposing interval/threshold/multiplier with sane defaults
 - [ ] **GEST-03**: User can make a gesture repeat per interval (e.g. switch multiple desktops in one continuous motion)
 - [ ] **GEST-04**: The gesture UI explains in plain language when/how often an action will fire
+- [ ] **GEST-05**: A gesture configured through the GUI takes effect live on hardware — the action fires, the builder reads back the existing binding, and granularity changes behavior (live-apply correctness; added Phase 4.2 after on-hardware UAT exposed the live-apply defect)
 
 ### Profiles
 
@@ -142,6 +143,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | GEST-02 | Phase 4 | Pending |
 | GEST-03 | Phase 4 | Pending |
 | GEST-04 | Phase 4 | Pending |
+| GEST-05 | Phase 4.2 | Pending |
 | PROF-02 | Phase 5 | Pending |
 | PROF-03 | Phase 5 | Pending |
 | PROF-04 | Phase 5 | Pending |
