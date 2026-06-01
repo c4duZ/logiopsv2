@@ -31,3 +31,11 @@ Full evidence: `.planning/debug/gesture-live-apply-and-save.md` (session `gestur
 
 ## Requirements
 - GEST-05 (live-apply correctness) + GEST-01..04 rework for UX alignment.
+
+## ⚠ EXECUTION GATE (plan-checker blocker, 2026-06-01 — decision: resolve at execution)
+The plan-checker flagged that Plan 04.2-01's premise (daemon creates a *detached, non-dispatched, non-introspectable* child action) is **NOT confirmed** and is contradicted by (a) the committed code — `ReleaseGesture::setAction` already assigns a strong `_action = makeAction(...)` on `_node` — and (b) the newest, still-`investigating` notes in the debug session, which suggest the daemon may be correct and the real culprit is **GUI call-ordering / node-materialization** (the GUI possibly issues `SetGesture`/`SetAction`/`SetKeys` to the wrong node or wrong order at runtime).
+
+**Decision (user, 2026-06-01):** do NOT lock the fix now — when Phase 4.2 executes (after 4.1), the FIRST task MUST be to **confirm the root cause** with a clean discriminating capture (live `busctl --system monitor` + daemon `-vvv` while configuring a NON-gesture button on the MX Master 4): does the GUI emit the calls, to the correct `/buttons/<N>/gestures/<dir>` node, in order, without error? Is the Introspect-omission of `Action.Keypress` actually reproducible on a fresh GUI-driven sequence?
+- If the daemon detached-copy defect **reproduces** → execute Plan 04.2-01 as written, pinning the test to that fresh evidence.
+- If it confirms **GUI ordering/materialization** → re-scope: shrink the daemon work to the `OnRelease`/`OnThreshold` interface-name collision + a regression CTest, and fix the real defect in the GUI (`ReassignPanel`/`GestureModel` — the `SetAction("Gesture")`-then-write ordering / node materialization).
+Either way, do not "fix" daemon code that is already correct while the real defect goes untouched (which would pass the CTest green but fail the hardware UAT).
